@@ -137,4 +137,35 @@ export const APP_CONSTANTS = {
   },
 } as const;
 
-export type SupportedImageFormat = typeof APP_CONSTANTS.SUPPORTED_IMAGE_FORMATS[number]; 
+export type SupportedImageFormat = typeof APP_CONSTANTS.SUPPORTED_IMAGE_FORMATS[number];
+
+// Phase 4: Image loading types
+export interface ImageLoadResult {
+  success: boolean;
+  data?: {
+    base64: string;
+    width: number;
+    height: number;
+    format: string;
+    size: number;
+  };
+  error?: string;
+}
+
+export interface ImageState {
+  loading: boolean;
+  loaded: boolean;
+  error: string | null;
+  imageData: ImageLoadResult['data'] | null;
+  selectedPath: string | null;
+}
+
+// Phase 4: Image operations
+export interface ImageOperations {
+  'image:load': (path: string) => Promise<ImageLoadResult>;
+}
+
+// Add Phase 4 IPC channels
+export const IMAGE_IPC_CHANNELS = {
+  IMAGE_LOAD: 'image:load',
+} as const; 

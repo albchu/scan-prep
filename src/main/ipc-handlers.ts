@@ -1,12 +1,15 @@
 import { ipcMain } from 'electron';
 import { FileManager } from './services/FileManager';
-import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, ThumbnailOptions } from '@shared/types';
+import { ImageProcessor } from './services/ImageProcessor';
+import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, ThumbnailOptions, IMAGE_IPC_CHANNELS, ImageLoadResult } from '@shared/types';
 
 export class IPCHandlers {
   private fileManager: FileManager;
+  private imageProcessor: ImageProcessor;
 
   constructor() {
     this.fileManager = new FileManager();
+    this.imageProcessor = new ImageProcessor();
     this.registerHandlers();
   }
 
@@ -65,6 +68,22 @@ export class IPCHandlers {
         return null;
       }
     });
+
+    // Phase 4: Handle image loading requests
+    ipcMain.handle(IMAGE_IPC_CHANNELS.IMAGE_LOAD, async (event, imagePath: string): Promise<ImageLoadResult> => {
+      try {
+        console.log('Loading image:', imagePath);
+        const result = await this.imageProcessor.loadImage(imagePath);
+        console.log('Image load result:', result.success ? 'success' : `failed - ${result.error}`);
+        return result;
+      } catch (error) {
+        console.error('Error loading image:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    });
   }
 
   /**
@@ -76,5 +95,7 @@ export class IPCHandlers {
     // Phase 3: Remove new handlers
     ipcMain.removeHandler(IPC_CHANNELS.FILE_GET_FILE_INFO);
     ipcMain.removeHandler(IPC_CHANNELS.FILE_GET_THUMBNAIL);
+    // Phase 4: Remove image handler
+    ipcMain.removeHandler(IMAGE_IPC_CHANNELS.IMAGE_LOAD);
   }
 } 

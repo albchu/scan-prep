@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ThreeColumnLayout } from './components/Layout/ThreeColumnLayout';
 import { FileExplorer } from './components/FileExplorer/FileExplorer';
-import { ImagePreviewPlaceholder } from './components/ImagePreview/ImagePreviewPlaceholder';
+import { ImagePreview } from './components/ImagePreview/ImagePreview';
 import { SubImageGridPlaceholder } from './components/SubImageGrid/SubImageGridPlaceholder';
 import { AppProvider } from './AppContext';
 
@@ -18,7 +18,7 @@ const App: React.FC = () => {
       <AppProvider onFileSelect={handleFileSelect}>
         <ThreeColumnLayout
           leftColumn={<FileExplorer />}
-          middleColumn={<ImagePreviewPlaceholder selectedImage={selectedImagePath} />}
+          middleColumn={<ImagePreview selectedImage={selectedImagePath} />}
           rightColumn={<SubImageGridPlaceholder />}
         />
       </AppProvider>
