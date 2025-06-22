@@ -2,7 +2,7 @@
 
 ## Overview
 
-This roadmap breaks down the image splitting application into **8 manageable phases**, each delivering working functionality that can be demonstrated, tested, and reviewed as an independent PR. Each phase builds incrementally toward the final application while maintaining a runnable state.
+This roadmap breaks down the image splitting application into **13 manageable phases**, each delivering working functionality that can be demonstrated, tested, and reviewed as an independent PR. Each phase builds incrementally toward the final application while maintaining a runnable state.
 
 ---
 
@@ -41,51 +41,80 @@ This roadmap breaks down the image splitting application into **8 manageable pha
 
 ---
 
-## 📂 Phase 2: File Explorer (Left Column)
-**Goal:** Implement directory navigation and file listing functionality
+## 📂 Phase 2: Basic File Navigation
+**Goal:** Implement basic directory navigation and file selection functionality
 
 ### Deliverables
 - [ ] Directory path input with validation
-- [ ] File system browsing via IPC
-- [ ] Thumbnail/list view toggle
-- [ ] Directory tree navigation
-- [ ] Image file filtering
+- [ ] Basic file listing via IPC
+- [ ] File selection (single image)
+- [ ] Error handling for invalid paths
 
 ### Technical Tasks
 ```typescript
 // New components:
 - src/renderer/components/FileExplorer/PathInput.tsx
-- src/renderer/components/FileExplorer/ViewToggle.tsx
-- src/renderer/components/FileExplorer/FileList.tsx
-- src/renderer/components/FileExplorer/DirectoryTree.tsx
+- src/renderer/components/FileExplorer/BasicFileList.tsx
 
 // Main process services:
 - src/main/services/FileManager.ts
-- src/main/ipc-handlers.ts (file operations)
+- src/main/ipc-handlers.ts (basic file operations)
 
 // IPC messages:
 - 'file:read-directory'
 - 'file:validate-path'
-- 'file:get-file-info'
 ```
 
 ### Acceptance Criteria
 - ✅ User can enter directory path and see validation
 - ✅ File list displays supported image formats (JPEG, PNG, TIFF)
-- ✅ Toggle between thumbnail and list views works
-- ✅ Directory navigation (folders expand/collapse)
 - ✅ File selection highlights the chosen image
 - ✅ Error handling for invalid paths
+- ✅ Basic IPC communication working
 
 ### Demo
-- Navigate to different directories
-- Show thumbnail vs list view toggle
+- Navigate to different directories via path input
 - Select various image files
-- Demonstrate error handling
+- Demonstrate error handling for invalid paths
 
 ---
 
-## 🖼️ Phase 3: Image Preview (Middle Column)
+## 📁 Phase 3: Advanced File Explorer
+**Goal:** Add advanced file navigation features and view options
+
+### Deliverables
+- [ ] Thumbnail/list view toggle
+- [ ] Directory tree navigation
+- [ ] Image file filtering and metadata
+- [ ] Enhanced file list with details
+
+### Technical Tasks
+```typescript
+// Updated components:
+- src/renderer/components/FileExplorer/ViewToggle.tsx
+- src/renderer/components/FileExplorer/DirectoryTree.tsx
+- src/renderer/components/FileExplorer/EnhancedFileList.tsx
+
+// Enhanced IPC messages:
+- 'file:get-file-info'
+- 'file:get-thumbnail'
+```
+
+### Acceptance Criteria
+- ✅ Toggle between thumbnail and list views works
+- ✅ Directory navigation (folders expand/collapse)
+- ✅ File metadata display (size, date modified)
+- ✅ Smooth transitions between view modes
+- ✅ Thumbnail generation for image files
+
+### Demo
+- Show thumbnail vs list view toggle
+- Navigate through directory tree
+- Display file metadata and thumbnails
+
+---
+
+## 🖼️ Phase 4: Image Preview (Middle Column)
 **Goal:** Display selected images with basic preview functionality
 
 ### Deliverables
@@ -126,95 +155,157 @@ This roadmap breaks down the image splitting application into **8 manageable pha
 
 ---
 
-## ✂️ Phase 4: Intelligent Image Analysis
-**Goal:** Implement automatic sub-image detection with dynamic rotation analysis
+## ✂️ Phase 5: Basic Image Detection
+**Goal:** Implement basic automatic sub-image detection with simple overlays
 
 ### Deliverables
 - [ ] "Analyze" button in middle column
-- [ ] Computer vision pipeline for sub-image detection
-- [ ] Dynamic rotation detection for each sub-image
-- [ ] Green overlay rectangles showing detected regions
+- [ ] Basic computer vision pipeline for sub-image detection
+- [ ] Simple green overlay rectangles showing detected regions
 - [ ] Progress indication for analysis operation
 
 ### Technical Tasks
 ```typescript
 // Updated components:
 - src/renderer/components/ImagePreview/AnalyzeButton.tsx
-- src/renderer/components/ImagePreview/DetectionOverlay.tsx
+- src/renderer/components/ImagePreview/BasicDetectionOverlay.tsx
 
 // Main process analysis logic:
-- src/main/services/ImageAnalysisService.ts (computer vision implementation)
+- src/main/services/ImageAnalysisService.ts (basic detection)
 - Add 'image:analyze' IPC handler
 
 // Shared types:
 - src/shared/types.ts (DetectedSubImage, AnalysisResult interfaces)
 
-// Computer vision pipeline:
+// Basic computer vision pipeline:
 - Edge detection and contour finding
 - Rectangular region filtering
-- Rotation angle detection
-- Confidence scoring
 ```
 
 ### Acceptance Criteria
 - ✅ "Analyze" button triggers computer vision analysis
 - ✅ Green overlay rectangles appear over detected sub-images
-- ✅ Each rectangle shows correct rotation (not just 90° increments)
-- ✅ Analysis completes within reasonable time (< 10 seconds for typical scans)
-- ✅ False positive detection rate is acceptably low
+- ✅ Analysis completes within reasonable time (< 15 seconds)
 - ✅ Progress indicator shows during analysis
+- ✅ Basic detection results are stored
 
 ### Demo
-- Show analysis of various scanned documents
-- Demonstrate detection of rotated sub-images
-- Show green overlay rectangles with dynamic rotations
-- Verify analysis performance and accuracy
+- Show analysis of scanned documents
+- Demonstrate basic detection overlays
+- Show progress indication
+- Verify basic detection functionality
 
 ---
 
-## 🔲 Phase 5: Sub-Image Extraction and Preview Grid
-**Goal:** Extract detected sub-images and display corrected previews in right column
+## 🔍 Phase 6: Advanced Detection Features
+**Goal:** Add dynamic rotation detection and confidence scoring
 
 ### Deliverables
-- [ ] Sub-image extraction with rotation correction
-- [ ] Perspective correction for skewed documents
+- [ ] Dynamic rotation detection for each sub-image
+- [ ] Enhanced overlay with rotation indicators
+- [ ] Confidence scoring system
+- [ ] Improved detection accuracy and performance
+
+### Technical Tasks
+```typescript
+// Enhanced components:
+- src/renderer/components/ImagePreview/AdvancedDetectionOverlay.tsx
+- src/renderer/components/ImagePreview/RotationIndicator.tsx
+
+// Enhanced analysis logic:
+- src/main/services/ImageAnalysisService.ts (rotation detection)
+- Rotation angle detection algorithms
+- Confidence scoring implementation
+```
+
+### Acceptance Criteria
+- ✅ Each rectangle shows correct rotation (not just 90° increments)
+- ✅ Rotation indicators visible on overlay rectangles
+- ✅ Confidence scores calculated for each detection
+- ✅ False positive detection rate is acceptably low
+- ✅ Enhanced performance optimization
+
+### Demo
+- Show detection of rotated sub-images
+- Demonstrate rotation indicators on overlays
+- Show confidence scoring in action
+- Verify improved detection accuracy
+
+---
+
+## 🔲 Phase 7: Basic Extraction and Grid
+**Goal:** Extract detected regions and display basic previews in right column
+
+### Deliverables
+- [ ] Basic sub-image extraction (cropping)
 - [ ] Right column grid showing extracted image previews
 - [ ] Empty state with "Analyze an image" message
-- [ ] Confidence indicators for each detection
+- [ ] Grid layout that adapts to number of detections
 
 ### Technical Tasks
 ```typescript
 // New components:
 - src/renderer/components/SubImageGrid/EmptyState.tsx
-- src/renderer/components/SubImageGrid/ExtractedImagePreview.tsx
-- src/renderer/components/SubImageGrid/ConfidenceIndicator.tsx
+- src/renderer/components/SubImageGrid/BasicExtractedPreview.tsx
+- src/renderer/components/SubImageGrid/GridContainer.tsx
 
-// Extraction and correction:
-- src/main/services/ImageAnalysisService.ts (extraction methods)
+// Basic extraction logic:
+- src/main/services/ImageAnalysisService.ts (basic extraction)
 - Add 'image:extract-subimage' IPC handler
-- Implement perspective correction algorithms
-
-// State management:
-- Update imageStore for detected and extracted images
 ```
 
 ### Acceptance Criteria
 - ✅ Empty state shows before any analysis
 - ✅ Extracted sub-images display in grid after analysis
-- ✅ Images are properly rotated and perspective-corrected
 - ✅ Grid adapts to variable number of detected images
-- ✅ Confidence scores visible for each detection
-- ✅ Low-confidence detections clearly marked
+- ✅ Basic extraction (cropping) works correctly
+- ✅ Grid scrolls properly when needed
 
 ### Demo
 - Show empty state initially
 - Analyze an image and see extracted previews populate
-- Demonstrate rotation and perspective correction
-- Show confidence indicators and low-confidence handling
+- Demonstrate adaptive grid layout
+- Show basic extraction functionality
 
 ---
 
-## 🔄 Phase 6: Detection Refinement and Manual Adjustment
+## 🎯 Phase 8: Advanced Image Correction
+**Goal:** Add rotation correction, perspective correction, and confidence indicators
+
+### Deliverables
+- [ ] Rotation correction during extraction
+- [ ] Perspective correction for skewed documents
+- [ ] Confidence indicators for each detection
+- [ ] Low-confidence detection warnings
+
+### Technical Tasks
+```typescript
+// Enhanced components:
+- src/renderer/components/SubImageGrid/EnhancedPreview.tsx
+- src/renderer/components/SubImageGrid/ConfidenceIndicator.tsx
+
+// Advanced correction algorithms:
+- src/main/services/ImageAnalysisService.ts (correction methods)
+- Rotation correction implementation
+- Perspective correction algorithms
+```
+
+### Acceptance Criteria
+- ✅ Images are properly rotated during extraction
+- ✅ Perspective correction applied to skewed documents
+- ✅ Confidence scores visible for each detection
+- ✅ Low-confidence detections clearly marked
+- ✅ Lossless quality maintained during correction
+
+### Demo
+- Show rotation and perspective correction
+- Demonstrate confidence indicators
+- Show low-confidence detection handling
+- Verify correction quality
+
+---
+
+## 🔄 Phase 9: Detection Refinement and Manual Adjustment
 **Goal:** Allow users to refine automatic detections and add manual regions
 
 ### Deliverables
@@ -258,7 +349,7 @@ This roadmap breaks down the image splitting application into **8 manageable pha
 
 ---
 
-## 💾 Phase 7: Export Functionality
+## 💾 Phase 10: Export Functionality
 **Goal:** Implement saving individual and batch export capabilities for extracted images
 
 ### Deliverables
@@ -299,88 +390,118 @@ This roadmap breaks down the image splitting application into **8 manageable pha
 
 ---
 
-## ✨ Phase 8: Advanced Features & Polish
-**Goal:** Advanced computer vision features and final user experience improvements
+## ⚙️ Phase 11: Analysis Modes
+**Goal:** Implement multiple detection algorithms with user-selectable modes
 
 ### Deliverables
-- [ ] Multiple analysis algorithms (user selectable)
-- [ ] Batch analysis for multiple scanned pages
+- [ ] Multiple detection algorithms (conservative/balanced/aggressive)
+- [ ] Analysis mode selection UI
+- [ ] Algorithm performance comparison
+- [ ] Mode-specific configuration options
+
+### Technical Tasks
+```typescript
+// Analysis mode components:
+- src/renderer/components/ImagePreview/AnalysisModeSelector.tsx
+- src/renderer/components/Settings/AnalysisSettings.tsx
+
+// Multiple algorithm implementations:
+- src/main/services/ImageAnalysisService.ts (mode-specific algorithms)
+- Conservative detection algorithm
+- Balanced detection algorithm  
+- Aggressive detection algorithm
+```
+
+### Acceptance Criteria
+- ✅ Multiple analysis modes available (conservative/balanced/aggressive)
+- ✅ Mode selection UI is intuitive and clear
+- ✅ Different algorithms produce varying detection results
+- ✅ Performance comparison data available
+- ✅ Mode settings persist between sessions
+
+### Demo
+- Show different analysis algorithm modes
+- Compare detection results between modes
+- Demonstrate mode selection interface
+- Show performance differences
+
+---
+
+## 📦 Phase 12: Batch Processing
+**Goal:** Process multiple images in sequence with queue management
+
+### Deliverables
+- [ ] Process multiple images in sequence
+- [ ] Batch analysis queue with progress tracking
+- [ ] Queue management (add/remove/reorder)
+- [ ] Batch results summary
+
+### Technical Tasks
+```typescript
+// Batch processing components:
+- src/renderer/components/BatchProcessor/QueueManager.tsx
+- src/renderer/components/BatchProcessor/BatchProgress.tsx
+- src/renderer/components/BatchProcessor/ResultsSummary.tsx
+
+// Batch processing logic:
+- src/main/services/BatchProcessor.ts
+- Queue management system
+- Progress tracking for multiple files
+- Batch results aggregation
+```
+
+### Acceptance Criteria
+- ✅ Multiple images can be queued for processing
+- ✅ Progress tracking shows current image and overall progress
+- ✅ Queue can be managed (add/remove/reorder items)
+- ✅ Batch results summary shows success/failure rates
+- ✅ Memory management handles multiple large images
+
+### Demo
+- Add multiple images to processing queue
+- Show progress tracking during batch processing
+- Demonstrate queue management features
+- Display batch results summary
+
+---
+
+## ✨ Phase 13: UI Polish & Final Features
+**Goal:** Final user experience improvements and performance optimization
+
+### Deliverables
 - [ ] Keyboard shortcuts for common actions
 - [ ] Drag & drop file support
+- [ ] Final animations and polish
 - [ ] Performance optimization for large images
 
 ### Technical Tasks
 ```typescript
-// Advanced features:
-- Multiple detection algorithms (conservative, aggressive, etc.)
-- Batch processing queue for multiple images
-- Algorithm performance comparison
-- Memory optimization for large scans
-
-// UX improvements:
+// Final UX improvements:
 - Keyboard navigation and shortcuts
 - Drag & drop handlers
-- Better loading states and animations
-- Advanced settings panel
+- Loading animations and transitions
+- Accessibility improvements
 
-// Performance:
-- Parallel processing for multiple regions
+// Performance optimizations:
 - Image caching strategies
 - Memory leak prevention
 - Large file handling improvements
+- UI responsiveness optimization
 ```
 
 ### Acceptance Criteria
-- ✅ Multiple analysis modes available (conservative/aggressive)
-- ✅ Process multiple images in sequence
 - ✅ Keyboard shortcuts work (Ctrl+A for analyze, Ctrl+S for save)
 - ✅ Drag & drop images from file system
 - ✅ Smooth performance with large scans (>20MB)
 - ✅ Professional, polished user interface
+- ✅ All animations and transitions are smooth
+- ✅ Accessibility standards met
 
 ### Demo
-- Show different analysis algorithm modes
-- Demonstrate batch processing multiple images
 - Show keyboard shortcuts in action
+- Demonstrate drag & drop functionality
 - Test with very large scanned documents
 - Show final polished experience
-
----
-
-## 🚀 Phase Timeline & Dependencies
-
-```mermaid
-gantt
-    title Development Timeline
-    dateFormat  YYYY-MM-DD
-    section Foundation
-    Phase 1: Foundation Setup           :p1, 2024-01-01, 5d
-    section Core Features  
-    Phase 2: File Explorer             :p2, after p1, 7d
-    Phase 3: Image Preview             :p3, after p2, 5d
-    Phase 4: Image Analysis            :p4, after p3, 7d
-    Phase 5: Sub-Image Extraction       :p5, after p4, 5d
-    section Advanced Features
-    Phase 6: Detection Refinement      :p6, after p5, 4d
-    Phase 7: Export                    :p7, after p6, 6d
-    section Polish
-    Phase 8: Advanced Features & Polish :p8, after p7, 7d
-```
-
-## 📝 PR Review Guidelines
-
-### For Each Phase PR:
-1. **Functionality Demo**: Include GIF/video showing new features
-2. **Test Coverage**: Unit tests for new components/services
-3. **Documentation**: Update README with new capabilities
-4. **Performance**: Memory usage and response time benchmarks
-5. **Error Handling**: Demonstrate error cases and recovery
-
-### Merge Criteria:
-- ✅ All acceptance criteria met
-- ✅ No TypeScript errors or ESLint warnings
-- ✅ Manual testing completed successfully
-- ✅ Performance requirements satisfied
-- ✅ Code review approved by team
+- Verify accessibility features
 
 This roadmap ensures steady progress with deliverable milestones at each phase, making the development process manageable and reviewable while building toward a complete, professional image splitting application. 
