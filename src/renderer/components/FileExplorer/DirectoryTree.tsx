@@ -4,7 +4,6 @@ import { DirectoryEntry, IPC_CHANNELS } from '@shared/types';
 interface DirectoryTreeProps {
   rootPath: string;
   currentPath: string;
-  onPathSelect: (path: string) => void;
   className?: string;
 }
 
@@ -95,8 +94,7 @@ const FolderOpenIcon: React.FC<{ className?: string }> = ({ className = '' }) =>
 export const DirectoryTree: React.FC<DirectoryTreeProps> = ({
   rootPath,
   currentPath,
-  onPathSelect,
-  className = ''
+  className = '',
 }) => {
   const [treeNodes, setTreeNodes] = useState<TreeNode[]>([]);
   const [loadingPaths, setLoadingPaths] = useState<Set<string>>(new Set());
@@ -198,9 +196,12 @@ export const DirectoryTree: React.FC<DirectoryTreeProps> = ({
     });
   };
 
+  // No directory selection—clicking nodes will only toggle expand/collapse
   const handleNodeClick = useCallback((node: TreeNode) => {
-    onPathSelect(node.path);
-  }, [onPathSelect]);
+    if (node.isDirectory) {
+      toggleDirectory(node);
+    }
+  }, [toggleDirectory]);
 
   const renderTreeNode = (node: TreeNode): React.ReactNode => {
     const isSelected = currentPath === node.path;
@@ -212,11 +213,8 @@ export const DirectoryTree: React.FC<DirectoryTreeProps> = ({
       <div key={node.path} className="select-none">
         <div
           className={`
-            flex items-center py-1 px-2 cursor-pointer rounded-md text-sm transition-colors duration-150
-            ${isSelected 
-              ? 'bg-blue-600 text-white' 
-              : 'text-dark-200 hover:bg-dark-700 hover:text-dark-100'
-            }
+            flex items-center py-1 px-2 rounded-md text-sm transition-colors duration-150
+            ${isSelected ? 'bg-blue-600 text-white' : 'text-dark-200 hover:bg-dark-700 hover:text-dark-100'} cursor-pointer
           `}
           style={{ paddingLeft: `${node.level * 16 + 8}px` }}
           onClick={() => handleNodeClick(node)}
