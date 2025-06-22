@@ -8,36 +8,35 @@ interface ImageDisplayProps {
 
 export const ImageDisplay: React.FC<ImageDisplayProps> = ({ imageData, fileName }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const [displayScale, setDisplayScale] = useState<number | null>(null);
 
   useEffect(() => {
-    const updateContainerSize = () => {
-      if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        setContainerSize({ width, height });
+    const resizeObserver = new ResizeObserver(() => {
+      if (containerRef.current && imageContainerRef.current && imageData) {
+        const container = imageContainerRef.current.getBoundingClientRect();
+        const padding = 40;
+        const maxWidth = container.width - padding;
+        const maxHeight = container.height - padding;
+
+        // Calculate how much the image is scaled to fit
+        const widthScale = maxWidth / imageData.width;
+        const heightScale = maxHeight / imageData.height;
+        const actualScale = Math.min(widthScale, heightScale, 1);
+
+        // Only show scale if image is being scaled down
+        setDisplayScale(actualScale < 1 ? actualScale : null);
       }
-    };
+    });
 
-    updateContainerSize();
-    window.addEventListener('resize', updateContainerSize);
-    return () => window.removeEventListener('resize', updateContainerSize);
-  }, []);
-
-  useEffect(() => {
-    if (imageData && containerSize.width > 0 && containerSize.height > 0) {
-      // Calculate scale to fit image within container
-      const padding = 40; // pixels of padding
-      const maxWidth = containerSize.width - padding;
-      const maxHeight = containerSize.height - padding - 120; // Account for bottom info section
-
-      const widthScale = maxWidth / imageData.width;
-      const heightScale = maxHeight / imageData.height;
-      const newScale = Math.min(widthScale, heightScale, 1); // Don't scale up
-
-      setScale(newScale);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
     }
-  }, [imageData, containerSize]);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [imageData]);
 
   if (!imageData) {
     return null;
@@ -52,23 +51,15 @@ export const ImageDisplay: React.FC<ImageDisplayProps> = ({ imageData, fileName 
   return (
     <div ref={containerRef} className="flex flex-col h-full">
       {/* Image container */}
-      <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
-        <div
-          className="relative bg-dark-800 rounded-lg shadow-2xl"
+      <div ref={imageContainerRef} className="flex-1 flex items-center justify-center p-4 overflow-auto">
+        <img
+          src={imageData.base64}
+          alt={fileName}
+          className="max-w-full max-h-full object-contain rounded-lg shadow-2xl bg-dark-800"
           style={{
-            width: imageData.width * scale,
-            height: imageData.height * scale,
+            imageRendering: displayScale && displayScale < 0.5 ? 'pixelated' : 'auto',
           }}
-        >
-          <img
-            src={imageData.base64}
-            alt={fileName}
-            className="w-full h-full rounded-lg"
-            style={{
-              imageRendering: scale < 0.5 ? 'pixelated' : 'auto',
-            }}
-          />
-        </div>
+        />
       </div>
 
       {/* Bottom section with file info and action button */}
@@ -80,9 +71,9 @@ export const ImageDisplay: React.FC<ImageDisplayProps> = ({ imageData, fileName 
             <span>{imageData.width} × {imageData.height}px</span>
             <span>{imageData.format}</span>
             <span>{formatFileSize(imageData.size)}</span>
-            {scale < 1 && (
+            {displayScale && (
               <span className="text-yellow-500">
-                {Math.round(scale * 100)}% zoom
+                {Math.round(displayScale * 100)}% zoom
               </span>
             )}
           </div>
