@@ -1,4 +1,4 @@
-import { BrowserWindow, Menu, shell } from 'electron';
+import { BrowserWindow, Menu, shell, app } from 'electron';
 import * as path from 'path';
 import { WindowOptions, APP_CONSTANTS } from '@shared/types';
 
@@ -97,7 +97,7 @@ export class WindowManager {
             label: 'Exit',
             accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
             click: () => {
-              this.closeMainWindow();
+              app.quit();
             },
           },
         ],
@@ -167,11 +167,12 @@ export class WindowManager {
               }
             },
           },
-          {
+                    {
             label: 'Close',
             accelerator: 'CmdOrCtrl+W',
             click: () => {
-              this.closeMainWindow();
+              // Always quit the app when closing window to ensure terminal process is killed
+              app.quit();
             },
           },
         ],
@@ -224,7 +225,7 @@ export class WindowManager {
             label: 'Quit',
             accelerator: 'Command+Q',
             click: () => {
-              this.closeMainWindow();
+              app.quit();
             },
           },
         ],
@@ -244,7 +245,8 @@ export class WindowManager {
           label: 'Close Window',
           accelerator: 'Cmd+W',
           click: () => {
-            this.closeMainWindow();
+            // Quit the app to ensure terminal process is killed
+            app.quit();
           },
         },
       ];

@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack --mode production",
     "build:dev": "webpack --mode development",
-    "dev": "concurrently \"webpack --mode development --watch\" \"wait-on dist/main/main.js && electron .\"",
+    "dev": "concurrently --kill-others --kill-others-on-fail \"webpack --mode development --watch\" \"wait-on dist/main/main.js && electron .\"",
     "start": "electron .",
     "clean": "rimraf dist",
     "lint": "eslint src --ext .ts,.tsx",

@@ -5,11 +5,13 @@ import { IPCHandlers } from './ipc-handlers';
 class Application {
   private windowManager: WindowManager;
   private ipcHandlers: IPCHandlers;
+  private isQuitting = false;
 
   constructor() {
     this.windowManager = new WindowManager();
     this.ipcHandlers = new IPCHandlers();
     this.setupEventHandlers();
+    this.setupProcessSignalHandlers();
   }
 
   private setupEventHandlers(): void {
@@ -27,13 +29,10 @@ class Application {
       });
     });
 
-    // Quit when all windows are closed, except on macOS. There, it's common
-    // for applications and their menu bar to stay active until the user quits
-    // explicitly with Cmd + Q.
+    // Quit when all windows are closed on all platforms
+    // This ensures the terminal process is killed when windows are closed
     app.on('window-all-closed', () => {
-      if (process.platform !== 'darwin') {
-        app.quit();
-      }
+      this.quit();
     });
 
     // Handle app activation (macOS)
@@ -43,6 +42,11 @@ class Application {
       if (this.windowManager.getMainWindow() === null) {
         this.createMainWindow();
       }
+    });
+
+    // Handle app quit attempts
+    app.on('before-quit', () => {
+      this.isQuitting = true;
     });
 
     // Security: Prevent new window creation using modern Electron API
@@ -74,12 +78,68 @@ class Application {
     });
   }
 
+  private setupProcessSignalHandlers(): void {
+    // Handle SIGINT (Ctrl+C)
+    process.on('SIGINT', () => {
+      console.log('\nReceived SIGINT (Ctrl+C). Shutting down gracefully...');
+      this.quit();
+    });
+
+    // Handle SIGTERM
+    process.on('SIGTERM', () => {
+      console.log('\nReceived SIGTERM. Shutting down gracefully...');
+      this.quit();
+    });
+
+    // Handle Windows Ctrl+C
+    if (process.platform === 'win32') {
+      process.on('SIGBREAK', () => {
+        console.log('\nReceived SIGBREAK. Shutting down gracefully...');
+        this.quit();
+      });
+    }
+  }
+
+  private quit(): void {
+    if (this.isQuitting) {
+      return;
+    }
+    
+    this.isQuitting = true;
+    console.log('Shutting down Scan Prep application...');
+    
+    // Close all windows
+    const windows = BrowserWindow.getAllWindows();
+    windows.forEach(window => {
+      if (!window.isDestroyed()) {
+        window.close();
+      }
+    });
+
+    // Quit the app
+    app.quit();
+    
+    // Force exit after a timeout to ensure we don't hang
+    setTimeout(() => {
+      console.log('Force exiting application...');
+      process.exit(0);
+    }, 1000);
+  }
+
   private createMainWindow(): void {
     try {
-      this.windowManager.createMainWindow();
+      const mainWindow = this.windowManager.createMainWindow();
+      
+      // Handle window close event
+      mainWindow.on('close', (event) => {
+        // Always quit the app when window is closed, regardless of platform
+        // This ensures the terminal process is killed when the window is closed
+        this.quit();
+      });
+      
     } catch (error) {
       console.error('Failed to create main window:', error);
-      app.quit();
+      this.quit();
     }
   }
 
@@ -118,10 +178,10 @@ application.initialize().catch((error) => {
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
-  app.quit();
+  process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  app.quit();
+  process.exit(1);
 }); 
