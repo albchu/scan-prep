@@ -1,34 +1,32 @@
 # Scan Prep - Image Splitting Tool
 
-Electron-based desktop application for lossless splitting of scanned images into separate sub-images.
+A desktop application for automatically detecting and extracting individual images from scanned documents containing multiple photos or images.
 
-## Phase 1 - Foundation Setup ✅
+## Overview
 
-This is the Phase 1 implementation of the Scan Prep development roadmap, establishing the basic Electron + React + TypeScript foundation with a dark-themed 3-column layout.
+Scan Prep helps digitize collections of physical photos by intelligently splitting multi-image scans into separate files. Perfect for:
 
-### Completed Features
+- Digitizing photo albums
+- Processing batch-scanned documents
+- Separating collaged images
+- Extracting individual photos from contact sheets
 
-- ✅ Electron application with TypeScript configuration
-- ✅ React setup with Tailwind CSS dark theme  
-- ✅ Basic 3-column layout structure
-- ✅ Window management and basic menu
-- ✅ Development build pipeline with hot-reload
+## Key Features
 
-### Architecture
+- **Automatic Image Detection**: Uses computer vision to identify individual images within a larger scan
+- **Lossless Extraction**: Preserves original image quality without recompression
+- **Batch Processing**: Process entire directories of scanned images
+- **Smart Cropping**: Automatically removes borders and adjusts for rotation
+- **Preview & Adjust**: Fine-tune detection results before saving
+- **Multiple Format Support**: Works with JPEG, PNG, and TIFF files
 
-The application uses a clean separation between main and renderer processes:
+## Application Interface
 
-- **Main Process** (`src/main/`): Electron window management and application lifecycle
-- **Renderer Process** (`src/renderer/`): React UI with three-column layout
-- **Shared** (`src/shared/`): Common types and constants
+The application features an intuitive three-column layout:
 
-### UI Structure
-
-The application features a responsive 3-column layout:
-
-1. **Left Column - File Explorer**: Directory navigation and file selection (placeholder in Phase 1)
-2. **Middle Column - Image Preview**: Image display and analysis controls (placeholder in Phase 1)  
-3. **Right Column - Sub-Image Grid**: Extracted image results (placeholder in Phase 1)
+1. **File Explorer**: Browse and select images or directories for processing
+2. **Image Preview**: View the original scan with detection overlay
+3. **Results Grid**: Preview extracted sub-images before saving
 
 ## Getting Started
 
@@ -39,7 +37,7 @@ The application features a responsive 3-column layout:
 
 ### Installation
 
-1. Clone the repository and navigate to the project directory
+1. Clone the repository
 2. Install dependencies:
 ```bash
 npm install
@@ -47,16 +45,10 @@ npm install
 
 ### Development
 
-Start the development environment with hot-reload:
+Start the development environment:
 ```bash
 npm run dev
 ```
-
-This will:
-- Build the application in development mode
-- Start Electron with the built application
-- Enable hot module replacement for fast development
-- Open Developer Tools automatically
 
 ### Building
 
@@ -69,81 +61,38 @@ npm run build
 
 ```bash
 npm run clean          # Clean build artifacts
-npm run lint           # Run ESLint code quality checks
-npm run lint:fix       # Fix auto-fixable ESLint issues
+npm run lint           # Run code quality checks
+npm run lint:fix       # Fix auto-fixable issues
 npm run type-check     # Run TypeScript type checking
-```
-
-## Project Structure
-
-```
-scan-prep/
-├── src/
-│   ├── main/                          # Main process (Electron)
-│   │   ├── main.ts                   # Application entry point
-│   │   └── window-manager.ts         # Window creation/management
-│   ├── renderer/                      # Renderer process (React)
-│   │   ├── components/
-│   │   │   ├── Layout/
-│   │   │   │   └── ThreeColumnLayout.tsx
-│   │   │   ├── FileExplorer/
-│   │   │   │   └── FileExplorerPlaceholder.tsx
-│   │   │   ├── ImagePreview/
-│   │   │   │   └── ImagePreviewPlaceholder.tsx
-│   │   │   └── SubImageGrid/
-│   │   │       └── SubImageGridPlaceholder.tsx
-│   │   ├── App.tsx                   # Main React component
-│   │   ├── index.tsx                 # React entry point
-│   │   ├── index.html                # HTML template
-│   │   └── styles.css                # Tailwind CSS and custom styles
-│   └── shared/                        # Shared types and constants
-│       └── types.ts
-├── docs/                              # Documentation
-├── package.json                       # Dependencies and scripts
-├── webpack.config.js                  # Build configuration
-├── tailwind.config.js                 # Tailwind CSS configuration
-├── tsconfig.json                      # TypeScript configuration
-└── README.md                         # This file
 ```
 
 ## Technology Stack
 
-- **Electron 28**: Cross-platform desktop framework
-- **React 18**: Component-based UI library
-- **TypeScript 5**: Type-safe JavaScript
-- **Tailwind CSS 3**: Utility-first CSS framework
-- **Webpack 5**: Module bundling and build optimization
+- **Electron**: Cross-platform desktop application framework
+- **React**: Modern UI library with component architecture
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Utility-first styling
+- **Computer Vision**: Advanced image detection algorithms
 
-## Dark Theme
+## Documentation
 
-The application features a professional dark theme optimized for extended use:
+- [Technical Design](docs/technical-design.md) - Architecture and design decisions
+- [Implementation Details](docs/implementation-details.md) - Detailed implementation notes
+- [Image Data Flow](docs/image-data-flow.md) - How image data flows through the application
+- [Development Roadmap](docs/dev_roadmap.md) - Planned features and enhancements
 
-- Consistent dark color palette throughout the interface
-- High contrast for excellent readability
-- Custom scrollbar styling
-- Smooth animations and transitions
-- Accessibility-focused design
+## System Architecture
 
-## Next Steps
+Scan Prep uses a modern Electron architecture with clear separation of concerns:
 
-Phase 1 establishes the foundation. Future phases will add:
-
-- **Phase 2**: Basic file navigation and directory browsing
-- **Phase 3**: Advanced file explorer with thumbnails and metadata
-- **Phase 4**: Image preview functionality
-- **Phase 5**: Automatic sub-image detection with computer vision
-- **And more...** (see `docs/dev_roadmap.md` for complete roadmap)
-
-## Development Notes
-
-- The application uses strict TypeScript configuration for type safety
-- ESLint is configured for code quality with React and TypeScript rules
-- Hot module replacement is enabled for fast development iteration
-- All placeholder components include hints about future functionality
+- **Main Process**: Handles file system operations, image processing, and native OS integration
+- **Renderer Process**: React-based UI for smooth user interactions
+- **IPC Bridge**: Secure communication between processes
+- **Image Processing Pipeline**: Efficient handling of large image files
 
 ## Contributing
 
-This project follows a phased development approach. Each phase has specific deliverables and acceptance criteria as outlined in the development roadmap.
+Contributions are welcome! Please read our contributing guidelines and check the development roadmap for planned features.
 
 ## License
 
