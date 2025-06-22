@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import { FileManager } from './services/FileManager';
 import { ImageProcessor } from './services/ImageProcessor';
-import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, ThumbnailOptions, IMAGE_IPC_CHANNELS, ImageLoadResult } from '@shared/types';
+import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, IMAGE_IPC_CHANNELS, ImageLoadResult } from '@shared/types';
 
 export class IPCHandlers {
   private fileManager: FileManager;
@@ -56,19 +56,6 @@ export class IPCHandlers {
       }
     });
 
-    // Phase 3: Handle thumbnail generation requests
-    ipcMain.handle(IPC_CHANNELS.FILE_GET_THUMBNAIL, async (event, filePath: string, options?: ThumbnailOptions): Promise<string | null> => {
-      try {
-        console.log('Generating thumbnail:', filePath);
-        const thumbnail = await this.fileManager.generateThumbnail(filePath, options);
-        console.log('Thumbnail generation result:', thumbnail ? 'success' : 'failed');
-        return thumbnail;
-      } catch (error) {
-        console.error('Error generating thumbnail:', error);
-        return null;
-      }
-    });
-
     // Phase 4: Handle image loading requests
     ipcMain.handle(IMAGE_IPC_CHANNELS.IMAGE_LOAD, async (event, imagePath: string): Promise<ImageLoadResult> => {
       try {
@@ -94,7 +81,6 @@ export class IPCHandlers {
     ipcMain.removeHandler(IPC_CHANNELS.FILE_VALIDATE_PATH);
     // Phase 3: Remove new handlers
     ipcMain.removeHandler(IPC_CHANNELS.FILE_GET_FILE_INFO);
-    ipcMain.removeHandler(IPC_CHANNELS.FILE_GET_THUMBNAIL);
     // Phase 4: Remove image handler
     ipcMain.removeHandler(IMAGE_IPC_CHANNELS.IMAGE_LOAD);
   }

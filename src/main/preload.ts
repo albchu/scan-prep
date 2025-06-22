@@ -10,7 +10,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
       'file:validate-path',
       // Phase 3 channels
       'file:get-file-info',
-      'file:get-thumbnail',
       // Phase 4 channels
       'image:load',
     ];

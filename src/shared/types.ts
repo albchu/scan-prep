@@ -18,7 +18,7 @@ export interface AppState {
   // File navigation state
   currentDirectory: string;
   selectedImage: string | null;
-  viewMode: 'thumbnail' | 'list';
+  viewMode: 'list';
   
   // UI state
   errorMessage: string | null;
@@ -36,7 +36,6 @@ export interface DirectoryEntry {
   // Phase 3: Enhanced metadata
   fileType?: string;
   dimensions?: { width: number; height: number };
-  thumbnail?: string; // Base64 encoded thumbnail
 }
 
 export interface FileValidationResult {
@@ -46,19 +45,13 @@ export interface FileValidationResult {
 }
 
 // Phase 3: View mode types
-export type ViewMode = 'thumbnail' | 'list';
+export type ViewMode = 'list';
 
 export interface ViewState {
   mode: ViewMode;
   showHidden: boolean;
   sortBy: 'name' | 'size' | 'date';
   sortOrder: 'asc' | 'desc';
-}
-
-// Phase 3: Thumbnail generation options
-export interface ThumbnailOptions {
-  size: number;
-  quality?: number;
 }
 
 // Phase 3: Enhanced file info
@@ -78,7 +71,6 @@ export interface FileOperations {
   'file:validate-path': (path: string) => Promise<FileValidationResult>;
   // Phase 3: Enhanced operations
   'file:get-file-info': (path: string) => Promise<EnhancedFileInfo | null>;
-  'file:get-thumbnail': (path: string, options?: ThumbnailOptions) => Promise<string | null>;
 }
 
 // IPC channel definitions for type safety
@@ -87,7 +79,6 @@ export const IPC_CHANNELS = {
   FILE_VALIDATE_PATH: 'file:validate-path',
   // Phase 3: New channels
   FILE_GET_FILE_INFO: 'file:get-file-info',
-  FILE_GET_THUMBNAIL: 'file:get-thumbnail',
 } as const;
 
 // Error handling types
@@ -121,18 +112,11 @@ export const APP_CONSTANTS = {
   SUPPORTED_IMAGE_FORMATS: ['.jpg', '.jpeg', '.png', '.tiff', '.tif'] as const,
   
   // UI Constants
-  THUMBNAIL_SIZE: 150,
   PREVIEW_MAX_WIDTH: 800,
   PREVIEW_MAX_HEIGHT: 600,
   
   // Phase 3: Enhanced UI constants
-  THUMBNAIL_SIZES: {
-    SMALL: 80,
-    MEDIUM: 120,
-    LARGE: 200,
-  },
   VIEW_MODES: {
-    THUMBNAIL: 'thumbnail' as const,
     LIST: 'list' as const,
   },
 } as const;

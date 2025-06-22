@@ -1,5 +1,23 @@
 import React from 'react';
 
+// Folder icon component
+const FolderIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"
+    />
+  </svg>
+);
+
 // Error state when directory contents cannot be read
 interface FileListErrorProps {
   message: string;
@@ -31,30 +49,11 @@ export const FileListError: React.FC<FileListErrorProps> = ({ message }) => (
 
 // Placeholder shown when no directory has been selected yet
 export const FileListNoDir: React.FC = () => (
-  <div className="h-full w-full flex items-center justify-center px-4">
-    <div className="text-center">
-      <div className="w-16 h-16 mx-auto mb-4 text-dark-500">
-        <svg
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"
-          />
-        </svg>
-      </div>
-      <h3 className="text-lg font-medium text-dark-300 mb-2">No Directory Selected</h3>
-      <p className="text-dark-500 text-sm max-w-sm">
-        Enter a directory path above to browse and select image files for processing.
-      </p>
-      <p className="text-dark-600 text-xs mt-2">
-        Use the view toggle to switch between list and thumbnail modes.
-      </p>
-    </div>
+  <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+    <FolderIcon className="w-16 h-16 text-dark-500 mb-4" />
+    <h3 className="text-lg font-medium text-dark-200 mb-2">No Directory Selected</h3>
+    <p className="text-sm text-dark-400 max-w-md">
+      Enter a directory path above to browse and select image files for processing.
+    </p>
   </div>
 ); 
