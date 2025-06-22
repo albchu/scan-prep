@@ -77,6 +77,7 @@ npm run type-check     # Run TypeScript type checking
 ## Documentation
 
 - [Technical Design](docs/technical-design.md) - Architecture and design decisions
+- [Sub-Image Extraction Concepts](docs/sub-image-extraction.md) - Algorithms and approach for detecting and extracting sub-images
 - [Implementation Details](docs/implementation-details.md) - Detailed implementation notes
 - [Image Data Flow](docs/image-data-flow.md) - How image data flows through the application
 - [Development Roadmap](docs/dev_roadmap.md) - Planned features and enhancements

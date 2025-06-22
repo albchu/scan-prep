@@ -228,6 +228,8 @@ scan-prep/
 
 ## Image Processing Integration
 
+For detailed information about the sub-image extraction algorithms and implementation approach, see [Sub-Image Extraction Concepts](./sub-image-extraction.md).
+
 ### Analysis Pipeline Architecture
 
 1. **Image Loading**: Load selected image from file system without modification
