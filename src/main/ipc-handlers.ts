@@ -1,15 +1,18 @@
 import { ipcMain } from 'electron';
 import { FileManager } from './services/FileManager';
 import { ImageProcessor } from './services/ImageProcessor';
-import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, IMAGE_IPC_CHANNELS, ImageLoadResult } from '@shared/types';
+import { ImageAnalysisService } from './services/ImageAnalysisService';
+import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, IMAGE_IPC_CHANNELS, ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, AnalysisOptions } from '@shared/types';
 
 export class IPCHandlers {
   private fileManager: FileManager;
   private imageProcessor: ImageProcessor;
+  private imageAnalysisService: ImageAnalysisService;
 
   constructor() {
     this.fileManager = new FileManager();
     this.imageProcessor = new ImageProcessor();
+    this.imageAnalysisService = new ImageAnalysisService();
     this.registerHandlers();
   }
 
@@ -71,6 +74,28 @@ export class IPCHandlers {
         };
       }
     });
+
+
+
+    // Phase 5: Handle click-based image analysis requests
+    ipcMain.handle(ANALYSIS_IPC_CHANNELS.IMAGE_ANALYZE_CLICK, async (event, imagePath: string, clickX: number, clickY: number, options?: Partial<AnalysisOptions>): Promise<AnalysisResult> => {
+      try {
+        console.log('Analyzing image with click:', imagePath, 'at coordinates:', { clickX, clickY }, 'with options:', options);
+        const result = await this.imageAnalysisService.analyzeImageWithClick(imagePath, clickX, clickY, options);
+        console.log(`Click analysis result: ${result.success ? 'success' : 'failed'}, found ${result.detectedImages.length} sub-images`);
+        return result;
+      } catch (error) {
+        console.error('Error analyzing image with click:', error);
+        return {
+          success: false,
+          detectedImages: [],
+          analysisTime: 0,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          imageWidth: 0,
+          imageHeight: 0,
+        };
+      }
+    });
   }
 
   /**
@@ -83,5 +108,7 @@ export class IPCHandlers {
     ipcMain.removeHandler(IPC_CHANNELS.FILE_GET_FILE_INFO);
     // Phase 4: Remove image handler
     ipcMain.removeHandler(IMAGE_IPC_CHANNELS.IMAGE_LOAD);
+    // Phase 5: Remove analysis handlers
+    ipcMain.removeHandler(ANALYSIS_IPC_CHANNELS.IMAGE_ANALYZE_CLICK);
   }
 } 

@@ -152,4 +152,70 @@ export interface ImageOperations {
 // Add Phase 4 IPC channels
 export const IMAGE_IPC_CHANNELS = {
   IMAGE_LOAD: 'image:load',
-} as const; 
+} as const;
+
+// Phase 5: Image analysis types
+export interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface DetectedSubImage {
+  id: string;
+  boundingBox: BoundingBox;
+  confidence: number; // 0-1 confidence score
+  area: number; // pixel area
+}
+
+export interface AnalysisResult {
+  success: boolean;
+  detectedImages: DetectedSubImage[];
+  analysisTime: number; // milliseconds
+  error?: string;
+  imageWidth: number;
+  imageHeight: number;
+}
+
+export interface AnalysisOptions {
+  backgroundColor: 'white' | 'black' | 'auto'; // Scanner background
+  minAreaThreshold: number; // Minimum area in pixels to consider
+  minDimensionThreshold: number; // Minimum width or height in pixels
+  confidenceThreshold: number; // Minimum confidence to include
+  edgeSensitivity: number; // 0-1, higher = more sensitive
+}
+
+export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptions = {
+  backgroundColor: 'white',
+  minAreaThreshold: 2500, // ~50x50 pixels minimum
+  minDimensionThreshold: 30, // At least 30 pixels in smallest dimension
+  confidenceThreshold: 0.3,
+  edgeSensitivity: 0.5,
+};
+
+// Phase 5: Analysis operations
+export interface AnalysisOperations {
+  'image:analyze-click': (imagePath: string, clickX: number, clickY: number, options?: Partial<AnalysisOptions>) => Promise<AnalysisResult>;
+}
+
+// Add Phase 5 IPC channels
+export const ANALYSIS_IPC_CHANNELS = {
+  IMAGE_ANALYZE_CLICK: 'image:analyze-click',
+} as const;
+
+// User-driven analysis types
+export interface ClickCoordinate {
+  x: number;
+  y: number;
+}
+
+export interface UserDetectedSubImage extends DetectedSubImage {
+  clickPoint: ClickCoordinate;
+  detectionMethod: 'automated' | 'user-click';
+}
+
+export interface UserAnalysisResult extends Omit<AnalysisResult, 'detectedImages'> {
+  detectedImages: UserDetectedSubImage[];
+  clickPoints: ClickCoordinate[];
+} 

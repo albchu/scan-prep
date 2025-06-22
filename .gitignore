@@ -100,4 +100,7 @@ report.html
 
 # Temporary folders
 tmp/
-temp/ 
+temp/
+
+# Debug assets
+debug/ 
