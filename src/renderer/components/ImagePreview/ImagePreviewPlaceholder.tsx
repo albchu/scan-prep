@@ -18,7 +18,34 @@ const ImageIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
   </svg>
 );
 
-export const ImagePreviewPlaceholder: React.FC = () => {
+interface ImagePreviewPlaceholderProps {
+  selectedImage?: string | null;
+}
+
+export const ImagePreviewPlaceholder: React.FC<ImagePreviewPlaceholderProps> = ({ selectedImage }) => {
+  if (selectedImage) {
+    return (
+      <div className="empty-state">
+        <ImageIcon className="empty-state-icon text-green-500" />
+        <h3 className="empty-state-title">Image Selected</h3>
+        <p className="empty-state-description">
+          {selectedImage.split('/').pop() || selectedImage}
+        </p>
+        <p className="text-xs text-dark-400 mt-2 max-w-md mx-auto break-all">
+          {selectedImage}
+        </p>
+        <div className="mt-6 space-y-3">
+          <button className="btn-primary w-full" disabled>
+            Analyze Image (Coming in Phase 5)
+          </button>
+          <div className="text-xs text-dark-500 text-center">
+            Image loading and preview coming in Phase 4
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="empty-state">
       <ImageIcon className="empty-state-icon" />

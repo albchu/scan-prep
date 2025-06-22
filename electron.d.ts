@@ -15,9 +15,12 @@ declare var module: {
   };
 };
 
-// Window interface extensions for potential future use
+// Window interface extensions for IPC communication
 declare global {
   interface Window {
-    electronAPI?: any;
+    electronAPI: {
+      invoke: (channel: string, ...args: any[]) => Promise<any>;
+      // Add other IPC methods as needed in future phases
+    };
   }
 } 

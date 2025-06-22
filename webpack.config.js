@@ -99,4 +99,42 @@ const rendererConfig = {
   ],
 };
 
-module.exports = [mainConfig, rendererConfig]; 
+// Preload script configuration  
+const preloadConfig = {
+  mode: isDevelopment ? 'development' : 'production',
+  entry: './src/main/preload.ts',
+  target: 'electron-preload',
+  devtool: isDevelopment ? 'source-map' : false,
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'ts-loader',
+          options: {
+            transpileOnly: true,
+          },
+        },
+      },
+    ],
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      '@main': path.resolve(__dirname, 'src/main'),
+      '@shared': path.resolve(__dirname, 'src/shared'),
+    },
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist/main'),
+    filename: 'preload.js',
+  },
+  node: {
+    __dirname: false,
+    __filename: false,
+  },
+};
+
+module.exports = [mainConfig, preloadConfig, rendererConfig]; 

@@ -1,11 +1,14 @@
 import { app, BrowserWindow } from 'electron';
 import { WindowManager } from './window-manager';
+import { IPCHandlers } from './ipc-handlers';
 
 class Application {
   private windowManager: WindowManager;
+  private ipcHandlers: IPCHandlers;
 
   constructor() {
     this.windowManager = new WindowManager();
+    this.ipcHandlers = new IPCHandlers();
     this.setupEventHandlers();
   }
 

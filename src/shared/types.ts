@@ -25,12 +25,7 @@ export interface AppState {
   successMessage: string | null;
 }
 
-// IPC message types for Phase 1 - will be expanded in later phases
-export interface FileOperations {
-  'file:read-directory': (path: string) => Promise<DirectoryEntry[]>;
-  'file:validate-path': (path: string) => Promise<boolean>;
-}
-
+// Phase 2: Enhanced file navigation types
 export interface DirectoryEntry {
   name: string;
   path: string;
@@ -39,6 +34,24 @@ export interface DirectoryEntry {
   size?: number;
   lastModified?: Date;
 }
+
+export interface FileValidationResult {
+  isValid: boolean;
+  error?: string;
+  entries?: DirectoryEntry[];
+}
+
+// IPC message types for file operations
+export interface FileOperations {
+  'file:read-directory': (path: string) => Promise<DirectoryEntry[]>;
+  'file:validate-path': (path: string) => Promise<FileValidationResult>;
+}
+
+// IPC channel definitions for type safety
+export const IPC_CHANNELS = {
+  FILE_READ_DIRECTORY: 'file:read-directory',
+  FILE_VALIDATE_PATH: 'file:validate-path',
+} as const;
 
 // Error handling types
 export interface AppError {
@@ -53,6 +66,8 @@ export const ERROR_CODES = {
   FILE_NOT_FOUND: 'FILE_NOT_FOUND',
   ACCESS_DENIED: 'ACCESS_DENIED',
   UNSUPPORTED_FORMAT: 'UNSUPPORTED_FORMAT',
+  DIRECTORY_NOT_FOUND: 'DIRECTORY_NOT_FOUND',
+  PERMISSION_DENIED: 'PERMISSION_DENIED',
   
   // General errors
   UNKNOWN_ERROR: 'UNKNOWN_ERROR'
