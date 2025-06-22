@@ -29,7 +29,7 @@ export const ImageDisplay: React.FC<ImageDisplayProps> = ({ imageData, fileName 
       // Calculate scale to fit image within container
       const padding = 40; // pixels of padding
       const maxWidth = containerSize.width - padding;
-      const maxHeight = containerSize.height - padding - 100; // Account for header
+      const maxHeight = containerSize.height - padding - 120; // Account for bottom info section
 
       const widthScale = maxWidth / imageData.width;
       const heightScale = maxHeight / imageData.height;
@@ -51,21 +51,6 @@ export const ImageDisplay: React.FC<ImageDisplayProps> = ({ imageData, fileName 
 
   return (
     <div ref={containerRef} className="flex flex-col h-full">
-      {/* Header with file info */}
-      <div className="p-4 border-b border-dark-700">
-        <h3 className="text-lg font-medium text-dark-100 truncate">{fileName}</h3>
-        <div className="flex items-center gap-4 mt-2 text-sm text-dark-400">
-          <span>{imageData.width} × {imageData.height}px</span>
-          <span>{imageData.format}</span>
-          <span>{formatFileSize(imageData.size)}</span>
-          {scale < 1 && (
-            <span className="text-yellow-500">
-              {Math.round(scale * 100)}% zoom
-            </span>
-          )}
-        </div>
-      </div>
-
       {/* Image container */}
       <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
         <div
@@ -86,9 +71,25 @@ export const ImageDisplay: React.FC<ImageDisplayProps> = ({ imageData, fileName 
         </div>
       </div>
 
-      {/* Action buttons placeholder for Phase 5 */}
-      <div className="p-4 border-t border-dark-700">
-        <button className="btn-primary w-full" disabled>
+      {/* Bottom section with file info and action button */}
+      <div className="p-4 border-t border-dark-700 space-y-3">
+        {/* File info */}
+        <div>
+          <h3 className="text-lg font-medium text-dark-100 truncate">{fileName}</h3>
+          <div className="flex items-center gap-4 mt-1 text-sm text-dark-400">
+            <span>{imageData.width} × {imageData.height}px</span>
+            <span>{imageData.format}</span>
+            <span>{formatFileSize(imageData.size)}</span>
+            {scale < 1 && (
+              <span className="text-yellow-500">
+                {Math.round(scale * 100)}% zoom
+              </span>
+            )}
+          </div>
+        </div>
+        
+        {/* Action button */}
+        <button className="btn-primary w-full text-center" disabled>
           Analyze Image (Coming in Phase 5)
         </button>
       </div>
