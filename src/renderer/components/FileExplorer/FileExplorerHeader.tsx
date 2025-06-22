@@ -1,15 +1,12 @@
 import React from 'react';
 import { PathInput } from './PathInput';
-import { ViewToggle } from './ViewToggle';
 import { useApp } from '../../AppContext';
 
 export const FileExplorerHeader: React.FC = () => {
   const {
     currentPath,
-    viewMode,
     handlePathChange,
     handlePathValidation,
-    handleViewModeChange,
   } = useApp();
 
   return (
@@ -23,13 +20,7 @@ export const FileExplorerHeader: React.FC = () => {
         />
       </div>
 
-      {/* Controls bar */}
-      <div className="flex items-center justify-end">
-        <ViewToggle
-          currentView={viewMode}
-          onViewChange={handleViewModeChange}
-        />
-      </div>
+      {/* Controls bar removed (view toggle) */}
     </div>
   );
 }; 

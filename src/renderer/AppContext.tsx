@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { DirectoryEntry, ViewMode, IPC_CHANNELS, APP_CONSTANTS } from '@shared/types';
+import { DirectoryEntry, IPC_CHANNELS } from '@shared/types';
 
 interface AppContextType {
   // Directory and file state
@@ -9,15 +9,11 @@ interface AppContextType {
   isLoadingDirectory: boolean;
   errorMessage: string | null;
   
-  // View state
-  viewMode: ViewMode;
-  
   // Actions
   setCurrentPath: (path: string) => void;
   handlePathChange: (newPath: string) => Promise<void>;
   handlePathValidation: (isValid: boolean, error?: string) => void;
   handleFileSelect: (filePath: string) => void;
-  handleViewModeChange: (newViewMode: ViewMode) => void;
   handleTreePathSelect: (path: string) => void;
 }
 
@@ -35,9 +31,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, onFileSelect
   const [directoryEntries, setDirectoryEntries] = useState<DirectoryEntry[]>([]);
   const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
-  // View state
-  const [viewMode, setViewMode] = useState<ViewMode>(APP_CONSTANTS.VIEW_MODES.LIST);
 
   const handlePathChange = useCallback(async (newPath: string) => {
     setCurrentPath(newPath);
@@ -79,11 +72,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, onFileSelect
     console.log('File selected:', filePath);
   }, [onFileSelect]);
 
-  const handleViewModeChange = useCallback((newViewMode: ViewMode) => {
-    setViewMode(newViewMode);
-    console.log('View mode changed to:', newViewMode);
-  }, []);
-
   const handleTreePathSelect = useCallback((path: string) => {
     console.log('Directory tree path selected:', path);
     handlePathChange(path);
@@ -97,15 +85,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, onFileSelect
     isLoadingDirectory,
     errorMessage,
     
-    // View state
-    viewMode,
-    
     // Actions
     setCurrentPath,
     handlePathChange,
     handlePathValidation,
     handleFileSelect,
-    handleViewModeChange,
     handleTreePathSelect,
   };
 

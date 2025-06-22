@@ -1,6 +1,5 @@
 import React from 'react';
-import { EnhancedFileList } from './EnhancedFileList';
-import { DirectoryTree } from './DirectoryTree';
+import { HierarchicalFileList } from './HierarchicalFileList';
 import { FileExplorerHeader } from './FileExplorerHeader';
 import { useApp } from '../../AppContext';
 import { FileListError, FileListNoDir } from './FileListStates';
@@ -21,7 +20,6 @@ export const FileExplorer: React.FC = () => {
     directoryEntries,
     isLoadingDirectory,
     errorMessage,
-    viewMode,
     handleFileSelect,
   } = useApp();
 
@@ -34,17 +32,15 @@ export const FileExplorer: React.FC = () => {
       return <FileListNoDir />;
     }
 
+    // hierarchical list view (only mode)
     return (
-      <div className="h-full w-full overflow-y-auto">
-        <div className="p-4">
-          <EnhancedFileList
-            entries={directoryEntries}
-            selectedFile={selectedFile}
-            onFileSelect={handleFileSelect}
-            viewMode={viewMode}
-            isLoading={isLoadingDirectory}
-          />
-        </div>
+      <div className="h-full w-full overflow-y-auto p-2">
+        <HierarchicalFileList
+          rootEntries={directoryEntries}
+          currentPath={currentPath || ''}
+          selectedFile={selectedFile}
+          onFileSelect={handleFileSelect}
+        />
       </div>
     );
   };
@@ -54,25 +50,8 @@ export const FileExplorer: React.FC = () => {
       <FileExplorerHeader />
 
       {/* Main content area */}
-      <div className="flex-1 flex min-h-0">
-        {/* Directory tree panel - Always visible */}
-        <div className="w-64 flex-shrink-0 border-r border-dark-700 bg-dark-850 overflow-y-auto">
-          <div className="p-3 border-b border-dark-700">
-            <h3 className="text-sm font-medium text-dark-200">Directories</h3>
-          </div>
-          {currentPath && (
-            <DirectoryTree
-              rootPath={currentPath}
-              currentPath={currentPath}
-              className="flex-1"
-            />
-          )}
-        </div>
-
-        {/* File list area */}
-        <div className="flex-1 min-w-0">
-          {renderFileListContent()}
-        </div>
+      <div className="flex-1 min-h-0">
+        {renderFileListContent()}
       </div>
 
       {/* Footer with selection info and view stats */}
@@ -82,11 +61,6 @@ export const FileExplorer: React.FC = () => {
             <p className="text-xs text-dark-400 truncate flex-1">
               Selected: <span className="text-dark-200">{selectedFile}</span>
             </p>
-            
-            {/* View mode indicator */}
-            <div className="ml-4 text-xs text-dark-500">
-              {viewMode === 'thumbnail' ? '🔲' : '📄'} {viewMode}
-            </div>
           </div>
         </div>
       )}
