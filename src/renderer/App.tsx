@@ -20,6 +20,12 @@ const App: React.FC = () => {
           leftColumn={<FileExplorer />}
           middleColumn={<ImagePreview selectedImage={selectedImagePath} />}
           rightColumn={<SubImageGridPlaceholder />}
+          minLeftWidth={250}
+          minMiddleWidth={400}
+          minRightWidth={300}
+          initialLeftWidth={25}
+          initialMiddleWidth={45}
+          initialRightWidth={30}
         />
       </AppProvider>
     </div>
