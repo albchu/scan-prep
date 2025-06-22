@@ -37,7 +37,6 @@ export const FileExplorer: React.FC = () => {
       <div className="h-full w-full overflow-y-auto p-2">
         <HierarchicalFileList
           rootEntries={directoryEntries}
-          currentPath={currentPath || ''}
           selectedFile={selectedFile}
           onFileSelect={handleFileSelect}
         />
