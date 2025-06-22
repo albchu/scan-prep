@@ -2,6 +2,7 @@
 module.exports = {
   content: [
     "./src/renderer/**/*.{js,ts,jsx,tsx}",
+    "./src/renderer/index.html"
   ],
   darkMode: 'class',
   theme: {
@@ -18,6 +19,7 @@ module.exports = {
           600: '#475569',
           700: '#334155',
           800: '#1e293b',
+          850: '#172033',
           900: '#0f172a',
           950: '#020617',
         },

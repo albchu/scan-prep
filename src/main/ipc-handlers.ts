@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { FileManager } from './services/FileManager';
-import { IPC_CHANNELS, DirectoryEntry, FileValidationResult } from '@shared/types';
+import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, ThumbnailOptions } from '@shared/types';
 
 export class IPCHandlers {
   private fileManager: FileManager;
@@ -39,6 +39,32 @@ export class IPCHandlers {
         };
       }
     });
+
+    // Phase 3: Handle enhanced file info requests
+    ipcMain.handle(IPC_CHANNELS.FILE_GET_FILE_INFO, async (event, filePath: string): Promise<EnhancedFileInfo | null> => {
+      try {
+        console.log('Getting file info:', filePath);
+        const fileInfo = await this.fileManager.getEnhancedFileInfo(filePath);
+        console.log('File info result:', fileInfo ? 'success' : 'not found');
+        return fileInfo;
+      } catch (error) {
+        console.error('Error getting file info:', error);
+        return null;
+      }
+    });
+
+    // Phase 3: Handle thumbnail generation requests
+    ipcMain.handle(IPC_CHANNELS.FILE_GET_THUMBNAIL, async (event, filePath: string, options?: ThumbnailOptions): Promise<string | null> => {
+      try {
+        console.log('Generating thumbnail:', filePath);
+        const thumbnail = await this.fileManager.generateThumbnail(filePath, options);
+        console.log('Thumbnail generation result:', thumbnail ? 'success' : 'failed');
+        return thumbnail;
+      } catch (error) {
+        console.error('Error generating thumbnail:', error);
+        return null;
+      }
+    });
   }
 
   /**
@@ -47,5 +73,8 @@ export class IPCHandlers {
   public removeHandlers(): void {
     ipcMain.removeHandler(IPC_CHANNELS.FILE_READ_DIRECTORY);
     ipcMain.removeHandler(IPC_CHANNELS.FILE_VALIDATE_PATH);
+    // Phase 3: Remove new handlers
+    ipcMain.removeHandler(IPC_CHANNELS.FILE_GET_FILE_INFO);
+    ipcMain.removeHandler(IPC_CHANNELS.FILE_GET_THUMBNAIL);
   }
 } 

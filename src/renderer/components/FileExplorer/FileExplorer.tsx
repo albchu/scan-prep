@@ -1,7 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { PathInput } from './PathInput';
-import { BasicFileList } from './BasicFileList';
-import { DirectoryEntry, IPC_CHANNELS } from '@shared/types';
+import { EnhancedFileList } from './EnhancedFileList';
+import { ViewToggle } from './ViewToggle';
+import { DirectoryTree } from './DirectoryTree';
+import { DirectoryEntry, IPC_CHANNELS, ViewMode, APP_CONSTANTS } from '@shared/types';
 
 // Type declaration for electronAPI
 declare global {
@@ -22,6 +24,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({ onFileSelect }) => {
   const [directoryEntries, setDirectoryEntries] = useState<DirectoryEntry[]>([]);
   const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // Phase 3: New state for advanced features
+  const [viewMode, setViewMode] = useState<ViewMode>(APP_CONSTANTS.VIEW_MODES.LIST);
+  const [showDirectoryTree, setShowDirectoryTree] = useState(true);
 
   const handlePathChange = useCallback(async (newPath: string) => {
     setCurrentPath(newPath);
@@ -63,10 +69,29 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({ onFileSelect }) => {
     console.log('File selected:', filePath);
   }, [onFileSelect]);
 
+  // Phase 3: Handle view mode changes
+  const handleViewModeChange = useCallback((newViewMode: ViewMode) => {
+    setViewMode(newViewMode);
+    console.log('View mode changed to:', newViewMode);
+  }, []);
+
+  // Phase 3: Handle directory tree navigation
+  const handleTreePathSelect = useCallback((path: string) => {
+    console.log('Directory tree path selected:', path);
+    handlePathChange(path);
+  }, [handlePathChange]);
+
+  // Phase 3: Toggle directory tree visibility
+  const toggleDirectoryTree = useCallback(() => {
+    setShowDirectoryTree(prev => !prev);
+  }, []);
+
   return (
     <div className="h-full flex flex-col bg-dark-900">
-      {/* Header with path input */}
-      <div className="flex-shrink-0 p-4 border-b border-dark-700">
+      {/* Header with path input and controls */}
+      <div className="flex-shrink-0 p-4 border-b border-dark-700 space-y-3">
+        {/* Path input */}
+        <div>
         <PathInput
           currentPath={currentPath}
           onPathChange={handlePathChange}
@@ -74,7 +99,57 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({ onFileSelect }) => {
         />
       </div>
 
-      {/* File list content area */}
+        {/* Controls bar */}
+        <div className="flex items-center justify-between">
+          {/* Directory tree toggle */}
+          <button
+            onClick={toggleDirectoryTree}
+            className="flex items-center px-3 py-1.5 text-sm text-dark-300 hover:text-dark-100 hover:bg-dark-700 rounded-md transition-colors duration-150"
+            title={showDirectoryTree ? 'Hide directory tree' : 'Show directory tree'}
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
+            </svg>
+            Tree
+          </button>
+
+          {/* View toggle */}
+          <ViewToggle
+            currentView={viewMode}
+            onViewChange={handleViewModeChange}
+          />
+        </div>
+      </div>
+
+      {/* Main content area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Directory tree panel */}
+        {showDirectoryTree && currentPath && (
+          <div className="w-64 border-r border-dark-700 bg-dark-850">
+            <div className="p-3 border-b border-dark-700">
+              <h3 className="text-sm font-medium text-dark-200">Directories</h3>
+            </div>
+            <DirectoryTree
+              rootPath={currentPath}
+              currentPath={currentPath}
+              onPathSelect={handleTreePathSelect}
+              className="flex-1"
+            />
+          </div>
+        )}
+
+        {/* File list area */}
       <div className="flex-1 overflow-hidden">
         {errorMessage ? (
           <div className="flex items-center justify-center h-full px-4">
@@ -101,10 +176,11 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({ onFileSelect }) => {
         ) : currentPath ? (
           <div className="h-full overflow-y-auto">
             <div className="p-4">
-              <BasicFileList
+                <EnhancedFileList
                 entries={directoryEntries}
                 selectedFile={selectedFile}
                 onFileSelect={handleFileSelect}
+                  viewMode={viewMode}
                 isLoading={isLoadingDirectory}
               />
             </div>
@@ -133,17 +209,28 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({ onFileSelect }) => {
               <p className="text-dark-500 text-sm max-w-sm">
                 Enter a directory path above to browse and select image files for processing.
               </p>
+                <p className="text-dark-600 text-xs mt-2">
+                  Use the view toggle to switch between list and thumbnail modes.
+                </p>
+              </div>
             </div>
+          )}
           </div>
-        )}
       </div>
 
-      {/* Footer with selection info */}
+      {/* Footer with selection info and view stats */}
       {selectedFile && (
         <div className="flex-shrink-0 px-4 py-2 bg-dark-800 border-t border-dark-700">
-          <p className="text-xs text-dark-400 truncate">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-dark-400 truncate flex-1">
             Selected: <span className="text-dark-200">{selectedFile}</span>
           </p>
+            
+            {/* View mode indicator */}
+            <div className="ml-4 text-xs text-dark-500">
+              {viewMode === 'thumbnail' ? '🔲' : '📄'} {viewMode}
+            </div>
+          </div>
         </div>
       )}
     </div>
