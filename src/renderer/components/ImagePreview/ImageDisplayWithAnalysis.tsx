@@ -1,65 +1,65 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult } from '@shared/types';
-import { BasicDetectionOverlay } from './BasicDetectionOverlay';
+import { InteractiveDetectionOverlay } from './InteractiveDetectionOverlay';
 
 interface ImageDisplayWithAnalysisProps {
-  imageData: ImageLoadResult['data'];
-  fileName: string;
   imagePath: string;
+  fileName: string;
+  imageData: ImageLoadResult['data'];
 }
 
-export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> = ({ 
-  imageData, 
+export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> = ({
+  imagePath,
   fileName,
-  imagePath 
+  imageData,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const [displayScale, setDisplayScale] = useState<number | null>(null);
+  
   const [displayDimensions, setDisplayDimensions] = useState({ width: 0, height: 0 });
+  const [displayScale, setDisplayScale] = useState<number | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clickDetections, setClickDetections] = useState<AnalysisResult[]>([]);
 
+  // Calculate display scale when image loads
   useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      if (containerRef.current && imageContainerRef.current && imageData) {
-        const container = imageContainerRef.current.getBoundingClientRect();
-        const padding = 40;
-        const maxWidth = container.width - padding;
-        const maxHeight = container.height - padding;
-
-        // Calculate how much the image is scaled to fit
-        const widthScale = maxWidth / imageData.width;
-        const heightScale = maxHeight / imageData.height;
-        const actualScale = Math.min(widthScale, heightScale, 1);
-
-        // Only show scale if image is being scaled down
-        setDisplayScale(actualScale < 1 ? actualScale : null);
-        
-        // Update display dimensions
-        if (imageRef.current) {
-          const rect = imageRef.current.getBoundingClientRect();
-          setDisplayDimensions({ width: rect.width, height: rect.height });
-        }
-      }
-    });
-
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
+    if (imageRef.current && imageData) {
+      const rect = imageRef.current.getBoundingClientRect();
+      const scale = Math.min(rect.width / imageData.width, rect.height / imageData.height);
+      setDisplayScale(scale);
+      setDisplayDimensions({ width: rect.width, height: rect.height });
     }
+  }, [imageData, displayDimensions.width, displayDimensions.height]);
 
-    return () => {
-      resizeObserver.disconnect();
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (imageRef.current && imageData) {
+        const rect = imageRef.current.getBoundingClientRect();
+        const scale = Math.min(rect.width / imageData.width, rect.height / imageData.height);
+        setDisplayScale(scale);
+        setDisplayDimensions({ width: rect.width, height: rect.height });
+      }
     };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [imageData]);
 
-  // Reset analysis when image changes
-  useEffect(() => {
-    setClickDetections([]);
-  }, [imagePath]);
-
-
+  /**
+   * Handle rotation change from the interactive overlay
+   */
+  const handleRotationChange = useCallback((detectionId: string, newRotation: number) => {
+    setClickDetections(prev => prev.map(result => ({
+      ...result,
+      detectedImages: result.detectedImages.map(detection => 
+        detection.id === detectionId 
+          ? { ...detection, userRotation: newRotation }
+          : detection
+      )
+    })));
+  }, []);
 
   const handleImageClick = useCallback(async (event: React.MouseEvent<HTMLImageElement>) => {
     if (!imageRef.current || !imageData || isAnalyzing) return;
@@ -140,14 +140,15 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
             onClick={handleImageClick}
           />
           
-          {/* Detection overlay */}
+          {/* Interactive detection overlay with rotation handles */}
           {clickDetections.some(d => d.detectedImages.length > 0) && (
-            <BasicDetectionOverlay
+            <InteractiveDetectionOverlay
               detectedImages={clickDetections.flatMap(d => d.detectedImages)}
               imageWidth={imageData.width}
               imageHeight={imageData.height}
               displayWidth={displayDimensions.width}
               displayHeight={displayDimensions.height}
+              onRotationChange={handleRotationChange}
             />
           )}
         </div>
@@ -175,6 +176,11 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
               <span className="text-blue-500">
                 {clickDetections.reduce((sum, d) => sum + d.detectedImages.length, 0)} detection{clickDetections.reduce((sum, d) => sum + d.detectedImages.length, 0) !== 1 ? 's' : ''} from {clickDetections.length} click{clickDetections.length !== 1 ? 's' : ''}
               </span>
+              {clickDetections.some(d => d.detectedImages.some(img => Math.abs(img.userRotation) > 1)) && (
+                <span className="text-orange-500 ml-2">
+                  (rotated)
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -182,7 +188,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
         {/* Instructions and clear button */}
         <div className="space-y-2">
           <div className="text-sm text-dark-300 text-center">
-            Click on the image to detect sub-images at specific locations
+            Click on the image to detect sub-images • Drag rotation handles to adjust angles
           </div>
           
           {clickDetections.length > 0 && (

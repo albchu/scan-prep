@@ -18,6 +18,7 @@ import {
 export class ImageAnalysisService {
   /**
    * Analyze an image with a user click point to detect a sub-image boundary
+   * Returns axis-aligned rectangles only - rotation is handled by UI
    */
   async analyzeImageWithClick(
     imagePath: string,
@@ -73,6 +74,7 @@ export class ImageAnalysisService {
 
   /**
    * Detect sub-image boundary using 8-directional traversal from click point
+   * Returns axis-aligned bounding box only
    */
   private async detectSubImageFromClick(
     image: Image,
@@ -97,10 +99,10 @@ export class ImageAnalysisService {
       tolerance
     );
 
-    // Calculate bounding box from boundary points
+    // Calculate axis-aligned bounding box from boundary points
     const boundingBox = calculateBoundingBox(boundaryPoints, clickX, clickY);
-
-    // Create detected sub-image with validation
+    
+    // Create detected sub-image (axis-aligned only)
     const detectedImage = createDetectedSubImage(boundingBox, options);
 
     if (!detectedImage) {

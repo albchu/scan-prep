@@ -162,9 +162,11 @@ export interface BoundingBox {
   height: number;
 }
 
+// Enhanced DetectedSubImage that supports user-controlled rotation
 export interface DetectedSubImage {
   id: string;
-  boundingBox: BoundingBox;
+  boundingBox: BoundingBox; // Initial axis-aligned bounding box from detection
+  userRotation: number; // User-applied rotation in degrees (0 by default)
   confidence: number; // 0-1 confidence score
   area: number; // pixel area
 }

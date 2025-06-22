@@ -99,6 +99,7 @@ export function createDetectedSubImage(
       width,
       height,
     },
+    userRotation: 0, // Initial rotation is 0 - user can adjust via UI
     confidence: 1.0, // User-driven detection has high confidence
     area,
   };
