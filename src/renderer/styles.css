@@ -1,0 +1,224 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom component styles */
+@layer components {
+  /* Three column layout */
+  .three-column-layout {
+    @apply grid grid-cols-3-column-responsive gap-0 h-full;
+  }
+  
+  /* Column base styles */
+  .column-base {
+    @apply flex flex-col bg-dark-800 border-r border-dark-700 overflow-hidden;
+  }
+  
+  .column-base:last-child {
+    @apply border-r-0;
+  }
+  
+  /* Column headers - make these draggable */
+  .column-header {
+    @apply px-4 py-3 bg-dark-900 border-b border-dark-700 flex items-center justify-center;
+    -webkit-app-region: drag;
+  }
+  
+  .column-title {
+    @apply text-sm font-medium text-dark-100 uppercase tracking-wide;
+    -webkit-app-region: drag;
+  }
+  
+  /* Column content areas - make these non-draggable */
+  .column-content {
+    @apply flex-1 p-4 overflow-auto;
+    -webkit-app-region: no-drag;
+  }
+  
+  /* Empty state styles */
+  .empty-state {
+    @apply flex flex-col items-center justify-center h-full text-center p-8;
+    -webkit-app-region: no-drag;
+  }
+  
+  .empty-state-icon {
+    @apply w-16 h-16 text-dark-500 mb-4;
+  }
+  
+  .empty-state-title {
+    @apply text-lg font-medium text-dark-300 mb-2;
+  }
+  
+  .empty-state-description {
+    @apply text-sm text-dark-500 max-w-sm;
+  }
+  
+  /* Button styles - make these non-draggable */
+  .btn-primary {
+    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 focus:ring-offset-dark-900 transition-colors duration-200;
+    -webkit-app-region: no-drag;
+  }
+  
+  .btn-secondary {
+    @apply inline-flex items-center px-4 py-2 border border-dark-600 text-sm font-medium rounded-md text-dark-300 bg-dark-700 hover:bg-dark-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 focus:ring-offset-dark-900 transition-colors duration-200;
+    -webkit-app-region: no-drag;
+  }
+  
+  .btn-danger {
+    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-error-600 hover:bg-error-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-error-500 focus:ring-offset-dark-900 transition-colors duration-200;
+    -webkit-app-region: no-drag;
+  }
+  
+  /* Input styles - make these non-draggable */
+  .input-primary {
+    @apply w-full px-3 py-2 border border-dark-600 rounded-md bg-dark-700 text-dark-100 placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200;
+    -webkit-app-region: no-drag;
+  }
+  
+  /* Card styles */
+  .card {
+    @apply bg-dark-700 border border-dark-600 rounded-lg shadow-sm;
+  }
+  
+  .card-header {
+    @apply px-4 py-3 border-b border-dark-600;
+  }
+  
+  .card-content {
+    @apply p-4;
+  }
+  
+  /* Status indicators */
+  .status-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent-900 text-accent-300;
+  }
+  
+  .status-warning {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-900 text-warning-300;
+  }
+  
+  .status-error {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-900 text-error-300;
+  }
+  
+  /* Loading states */
+  .loading-spinner {
+    @apply animate-spin rounded-full h-6 w-6 border-2 border-dark-600 border-t-primary-500;
+  }
+  
+  .loading-overlay {
+    @apply absolute inset-0 bg-dark-900 bg-opacity-75 flex items-center justify-center z-50;
+  }
+  
+  /* Drag and drop styles */
+  .drop-zone {
+    @apply border-2 border-dashed border-dark-600 rounded-lg p-8 text-center transition-colors duration-200;
+    -webkit-app-region: no-drag;
+  }
+  
+  .drop-zone-active {
+    @apply border-primary-500 bg-primary-900 bg-opacity-10;
+  }
+  
+  /* Focus styles for accessibility */
+  .focus-outline {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-900;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  /* Text selection utilities */
+  .select-text {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+  
+  .select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* App region utilities */
+  .app-region-drag {
+    -webkit-app-region: drag;
+  }
+  
+  .app-region-no-drag {
+    -webkit-app-region: no-drag;
+  }
+  
+  /* Scrollbar utilities */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+  }
+  
+  .animate-slide-in-left {
+    animation: slideInLeft 0.3s ease-out;
+  }
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Application-specific styles */
+.app-container {
+  @apply w-full h-screen bg-dark-950 text-dark-100 overflow-hidden;
+}
+
+/* Ensure proper font rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+} 
