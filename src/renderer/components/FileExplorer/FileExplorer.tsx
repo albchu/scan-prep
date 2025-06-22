@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { PathInput } from './PathInput';
 import { EnhancedFileList } from './EnhancedFileList';
 import { ViewToggle } from './ViewToggle';
 import { DirectoryTree } from './DirectoryTree';
-import { DirectoryEntry, IPC_CHANNELS, ViewMode, APP_CONSTANTS } from '@shared/types';
+import { useApp } from '../../AppContext';
 
 // Type declaration for electronAPI
 declare global {
@@ -14,67 +14,20 @@ declare global {
   }
 }
 
-interface FileExplorerProps {
-  onFileSelect?: (filePath: string) => void;
-}
-
-export const FileExplorer: React.FC<FileExplorerProps> = ({ onFileSelect }) => {
-  const [currentPath, setCurrentPath] = useState<string>('');
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [directoryEntries, setDirectoryEntries] = useState<DirectoryEntry[]>([]);
-  const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>(APP_CONSTANTS.VIEW_MODES.LIST);
-
-  const handlePathChange = useCallback(async (newPath: string) => {
-    setCurrentPath(newPath);
-    setSelectedFile(null);
-    setErrorMessage(null);
-    setIsLoadingDirectory(true);
-
-    try {
-      console.log('Loading directory:', newPath);
-      const entries = await window.electronAPI.invoke(IPC_CHANNELS.FILE_READ_DIRECTORY, newPath);
-      setDirectoryEntries(entries);
-      console.log(`Loaded ${entries.length} entries`);
-    } catch (error) {
-      console.error('Failed to load directory:', error);
-      setErrorMessage(`Failed to load directory: ${error}`);
-      setDirectoryEntries([]);
-    } finally {
-      setIsLoadingDirectory(false);
-    }
-  }, []);
-
-  const handlePathValidation = useCallback((isValid: boolean, error?: string) => {
-    if (!isValid) {
-      setErrorMessage(error || 'Invalid directory path');
-      setDirectoryEntries([]);
-    } else {
-      setErrorMessage(null);
-    }
-  }, []);
-
-  const handleFileSelect = useCallback((filePath: string) => {
-    setSelectedFile(filePath);
-    
-    // Notify parent component if callback is provided
-    if (onFileSelect) {
-      onFileSelect(filePath);
-    }
-    
-    console.log('File selected:', filePath);
-  }, [onFileSelect]);
-
-  const handleViewModeChange = useCallback((newViewMode: ViewMode) => {
-    setViewMode(newViewMode);
-    console.log('View mode changed to:', newViewMode);
-  }, []);
-
-  const handleTreePathSelect = useCallback((path: string) => {
-    console.log('Directory tree path selected:', path);
-    handlePathChange(path);
-  }, [handlePathChange]);
+export const FileExplorer: React.FC = () => {
+  const {
+    currentPath,
+    selectedFile,
+    directoryEntries,
+    isLoadingDirectory,
+    errorMessage,
+    viewMode,
+    handlePathChange,
+    handlePathValidation,
+    handleFileSelect,
+    handleViewModeChange,
+    handleTreePathSelect,
+  } = useApp();
 
   const renderFileListContent = () => {
     if (errorMessage) {

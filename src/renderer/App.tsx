@@ -3,6 +3,7 @@ import { ThreeColumnLayout } from './components/Layout/ThreeColumnLayout';
 import { FileExplorer } from './components/FileExplorer/FileExplorer';
 import { ImagePreviewPlaceholder } from './components/ImagePreview/ImagePreviewPlaceholder';
 import { SubImageGridPlaceholder } from './components/SubImageGrid/SubImageGridPlaceholder';
+import { AppProvider } from './AppContext';
 
 const App: React.FC = () => {
   const [selectedImagePath, setSelectedImagePath] = useState<string | null>(null);
@@ -14,11 +15,13 @@ const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      <ThreeColumnLayout
-        leftColumn={<FileExplorer onFileSelect={handleFileSelect} />}
-        middleColumn={<ImagePreviewPlaceholder selectedImage={selectedImagePath} />}
-        rightColumn={<SubImageGridPlaceholder />}
-      />
+      <AppProvider onFileSelect={handleFileSelect}>
+        <ThreeColumnLayout
+          leftColumn={<FileExplorer />}
+          middleColumn={<ImagePreviewPlaceholder selectedImage={selectedImagePath} />}
+          rightColumn={<SubImageGridPlaceholder />}
+        />
+      </AppProvider>
     </div>
   );
 };
