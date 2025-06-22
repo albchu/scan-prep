@@ -36,12 +36,14 @@ Scan Prep is an Electron-based desktop application designed specifically for **s
 │  (Node.js + Electron Main Thread)  │
 ├─────────────────────────────────────┤
 │  • File System Operations          │
-│  • Menu Management                 │
-│  • Window Management               │
+│  • Image Processing (image-js)     │
+│  • Image Splitting Logic           │
+│  • Export/Save Operations          │
+│  • Menu & Window Management        │
 │  • IPC Communication Hub           │
 └─────────────────────────────────────┘
                     │
-                    │ IPC
+            IPC (optimized data transfer)
                     │
 ┌─────────────────────────────────────┐
 │          Renderer Process          │
@@ -54,14 +56,108 @@ Scan Prep is an Electron-based desktop application designed specifically for **s
 │  │  • Sub-Image Grid (Right)       ││
 │  └─────────────────────────────────┘│
 │  ┌─────────────────────────────────┐│
-│  │    Image Splitting Layer        ││
-│  │  • image-js Integration         ││
-│  │  • Split Operations             ││
-│  │  • Rotation Operations          ││
-│  │  • Export Logic                 ││
+│  │      UI Logic Only              ││
+│  │  • Canvas Rendering             ││
+│  │  • User Interactions            ││
+│  │  • State Management             ││
+│  │  • Visual Components            ││
 │  └─────────────────────────────────┘│
 └─────────────────────────────────────┘
 ```
+
+### Architecture Flow Diagram
+
+```mermaid
+graph TB
+    subgraph "Main Process (Node.js)"
+        MP[Main Entry Point]
+        WM[Window Manager]
+        IPC[IPC Handlers]
+        
+        subgraph "Services"
+            FM[File Manager]
+            IP[Image Processor]
+            EM[Export Manager]
+        end
+        
+        subgraph "Image Processing"
+            IL[Image Loader]
+            IS[Image Splitter]
+            IR[Image Rotator]
+            IC[Image Cache]
+        end
+    end
+    
+    subgraph "Renderer Process (Chromium + React)"
+        subgraph "UI Components"
+            FE[File Explorer<br/>Left Column]
+            PV[Image Preview<br/>Middle Column] 
+            SG[Sub-Image Grid<br/>Right Column]
+        end
+        
+        subgraph "UI Logic"
+            SM[State Management]
+            CR[Canvas Rendering]
+            UH[User Interactions]
+        end
+    end
+    
+    subgraph "User Actions & Data Flow"
+        U1[User enters path] --> FE
+        U2[User selects image] --> PV
+        U3[User clicks Split] --> PV
+        U4[User rotates/saves] --> SG
+    end
+    
+    %% IPC Communication
+    FE -.->|"file:read-directory"| IPC
+    IPC -.->|"Directory entries"| FE
+    
+    PV -.->|"file:load-image"| IPC
+    IPC -.->|"Image thumbnail"| PV
+    
+    PV -.->|"image:split"| IPC
+    IPC -.->|"Sub-image metadata"| SG
+    
+    SG -.->|"image:rotate"| IPC
+    SG -.->|"export:save-image"| IPC
+    
+    %% Internal Main Process Flow
+    IPC --> FM
+    IPC --> IP
+    IPC --> EM
+    
+    FM --> IL
+    IP --> IS
+    IP --> IR
+    IP --> IC
+    
+    %% Styling
+    classDef mainProcess fill:#2d3748,stroke:#4a5568,stroke-width:2px,color:#e2e8f0
+    classDef rendererProcess fill:#1a365d,stroke:#2c5282,stroke-width:2px,color:#e2e8f0
+    classDef userAction fill:#553c9a,stroke:#6b46c1,stroke-width:2px,color:#e2e8f0
+    classDef ipcFlow stroke:#f56565,stroke-width:3px
+    
+    class MP,WM,IPC,FM,IP,EM,IL,IS,IR,IC mainProcess
+    class FE,PV,SG,SM,CR,UH rendererProcess
+    class U1,U2,U3,U4 userAction
+```
+
+**Key Architectural Improvements:**
+
+1. **🏗️ Process Separation by Capability**
+   - **Main Process**: All heavy lifting (file I/O, image processing, exports)
+   - **Renderer Process**: Pure UI logic and user interactions
+
+2. **🚀 Performance Optimization**
+   - Image processing doesn't block UI rendering
+   - Main process has more memory available for large images
+   - Efficient data streaming for image results
+
+3. **📊 Optimized Data Transfer**
+   - Send minimal data over IPC (compressed thumbnails, metadata)
+   - Stream large images only when needed
+   - Cache processed results in main process
 
 ### Project Structure
 
@@ -72,24 +168,24 @@ scan-prep/
 │   │   ├── main.ts             # Application entry point
 │   │   ├── menu.ts             # Application menu
 │   │   ├── window-manager.ts   # Window management
-│   │   └── ipc-handlers.ts     # IPC communication handlers
+│   │   ├── ipc-handlers.ts     # IPC communication handlers
+│   │   └── services/           # Core business logic
+│   │       ├── ImageProcessor.ts   # image-js integration & splitting
+│   │       ├── FileManager.ts      # File system operations
+│   │       └── ExportManager.ts    # Save/export operations
 │   ├── renderer/               # Renderer process code
 │   │   ├── components/         # React components
 │   │   │   ├── FileExplorer/   # Left column - file navigation
 │   │   │   ├── ImagePreview/   # Middle column - image preview & split
 │   │   │   ├── SubImageGrid/   # Right column - split results
 │   │   │   └── Layout/         # 3-column layout wrapper
-│   │   ├── services/           # Business logic
-│   │   │   ├── ImageSplitter.ts # Core splitting functionality
-│   │   │   ├── FileManager.ts   # File system operations
-│   │   │   └── ExportManager.ts # Save/export operations
 │   │   ├── hooks/              # React hooks
-│   │   ├── types/              # TypeScript type definitions
-│   │   ├── utils/              # Utility functions
+│   │   ├── stores/             # UI state management
+│   │   ├── utils/              # UI utility functions
 │   │   └── App.tsx             # Main React component
 │   └── shared/                 # Shared code between processes
-│       ├── types.ts
-│       └── constants.ts
+│       ├── types.ts            # Common type definitions
+│       └── constants.ts        # Shared constants
 ├── assets/                     # Static assets
 ├── build/                      # Build configuration
 ├── dist/                       # Built application
