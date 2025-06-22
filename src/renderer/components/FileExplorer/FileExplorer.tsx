@@ -1,8 +1,7 @@
 import React from 'react';
-import { PathInput } from './PathInput';
 import { EnhancedFileList } from './EnhancedFileList';
-import { ViewToggle } from './ViewToggle';
 import { DirectoryTree } from './DirectoryTree';
+import { FileExplorerHeader } from './FileExplorerHeader';
 import { useApp } from '../../AppContext';
 
 // Type declaration for electronAPI
@@ -22,10 +21,7 @@ export const FileExplorer: React.FC = () => {
     isLoadingDirectory,
     errorMessage,
     viewMode,
-    handlePathChange,
-    handlePathValidation,
     handleFileSelect,
-    handleViewModeChange,
     handleTreePathSelect,
   } = useApp();
 
@@ -106,25 +102,7 @@ export const FileExplorer: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col bg-dark-900">
-      {/* Header with path input and controls */}
-      <div className="flex-shrink-0 p-4 border-b border-dark-700 space-y-3">
-        {/* Path input */}
-        <div>
-          <PathInput
-            currentPath={currentPath}
-            onPathChange={handlePathChange}
-            onPathValidation={handlePathValidation}
-          />
-        </div>
-
-        {/* Controls bar */}
-        <div className="flex items-center justify-end">
-          <ViewToggle
-            currentView={viewMode}
-            onViewChange={handleViewModeChange}
-          />
-        </div>
-      </div>
+      <FileExplorerHeader />
 
       {/* Main content area */}
       <div className="flex-1 flex min-h-0">
