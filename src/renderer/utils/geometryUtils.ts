@@ -122,7 +122,7 @@ export function getRotationHandlePosition(
  * Get mouse position relative to an SVG element
  */
 export function getMousePositionRelativeToSVG(
-  event: React.MouseEvent,
+  event: React.MouseEvent | MouseEvent,
   svgElement: SVGSVGElement | null
 ): Point {
   if (!svgElement) return { x: 0, y: 0 };

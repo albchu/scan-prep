@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { DetectedSubImage } from '@shared/types';
 import { 
   calculateAngleBetweenPoints, 
@@ -12,6 +12,7 @@ interface DragState {
   detectionId: string;
   startAngle: number;
   startRotation: number;
+  svgElement: SVGSVGElement;
 }
 
 interface UseRotationDragProps {
@@ -26,6 +27,55 @@ export function useRotationDrag({
   onRotationChange,
 }: UseRotationDragProps) {
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const dragStateRef = useRef<DragState | null>(null);
+  
+  // Keep the ref in sync with state
+  useEffect(() => {
+    dragStateRef.current = dragState;
+  }, [dragState]);
+
+  /**
+   * Handle global mouse events
+   */
+  useEffect(() => {
+    // Define event handlers
+    function handleGlobalMouseMove(event: MouseEvent) {
+      const currentDragState = dragStateRef.current;
+      if (!currentDragState) return;
+      
+      const detection = detectedImages.find(d => d.id === currentDragState.detectionId);
+      if (!detection) return;
+      
+      const mousePos = getMousePositionRelativeToSVG(
+        event, 
+        currentDragState.svgElement
+      );
+      const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
+      const currentAngle = calculateAngleBetweenPoints(center.x, center.y, mousePos.x, mousePos.y);
+      
+      // Calculate rotation delta and apply to original rotation
+      const angleDelta = currentAngle - currentDragState.startAngle;
+      const newRotation = normalizeAngle(currentDragState.startRotation + angleDelta);
+      
+      onRotationChange(detection.id, newRotation);
+    }
+    
+    function handleGlobalMouseUp() {
+      setDragState(null);
+    }
+    
+    // Add document-level event listeners
+    if (dragStateRef.current) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+    
+    // Cleanup function to remove listeners
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [detectedImages, scaleFactors, onRotationChange]); // Note we don't need dragState here as we use the ref
 
   /**
    * Handle rotation drag start
@@ -38,6 +88,8 @@ export function useRotationDrag({
     event.preventDefault();
     event.stopPropagation();
     
+    if (!svgElement) return;
+    
     const mousePos = getMousePositionRelativeToSVG(event, svgElement);
     const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
     const startAngle = calculateAngleBetweenPoints(center.x, center.y, mousePos.x, mousePos.y);
@@ -46,36 +98,19 @@ export function useRotationDrag({
       detectionId: detection.id,
       startAngle,
       startRotation: detection.userRotation,
+      svgElement,
     });
   }, [scaleFactors]);
 
   /**
-   * Handle rotation drag
+   * These functions are kept for API compatibility but functionality moved to document-level listeners
    */
-  const handleRotationDrag = useCallback((
-    event: React.MouseEvent,
-    svgElement: SVGSVGElement | null
-  ) => {
-    if (!dragState) return;
-    
-    const detection = detectedImages.find(d => d.id === dragState.detectionId);
-    if (!detection) return;
-    
-    const mousePos = getMousePositionRelativeToSVG(event, svgElement);
-    const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
-    const currentAngle = calculateAngleBetweenPoints(center.x, center.y, mousePos.x, mousePos.y);
-    
-    // Calculate rotation delta and apply to original rotation
-    const angleDelta = currentAngle - dragState.startAngle;
-    const newRotation = normalizeAngle(dragState.startRotation + angleDelta);
-    
-    onRotationChange(detection.id, newRotation);
-  }, [dragState, detectedImages, scaleFactors, onRotationChange]);
+  const handleRotationDrag = useCallback((_event: React.MouseEvent, _svgElement: SVGSVGElement | null) => {
+    // Local drag handling is no longer needed since we use document-level mousemove
+  }, []);
 
-  /**
-   * Handle rotation drag end
-   */
   const handleRotationEnd = useCallback(() => {
+    // This is handled by document-level mouseup event listener
     setDragState(null);
   }, []);
 

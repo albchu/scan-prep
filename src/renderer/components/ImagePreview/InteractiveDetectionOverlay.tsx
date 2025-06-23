@@ -33,24 +33,11 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
   const scaleFactors = calculateScaleFactors(imageWidth, imageHeight, displayWidth, displayHeight);
 
   // Use rotation drag hook
-  const { handleRotationStart, handleRotationDrag, handleRotationEnd } = useRotationDrag({
+  const { handleRotationStart } = useRotationDrag({
     detectedImages,
     scaleFactors,
     onRotationChange,
   });
-
-  // Handle mouse events with SVG element reference
-  const onMouseMove = (event: React.MouseEvent) => {
-    handleRotationDrag(event, overlayRef.current);
-  };
-
-  const onMouseUp = () => {
-    handleRotationEnd();
-  };
-
-  const onMouseLeave = () => {
-    handleRotationEnd();
-  };
 
   const onRotationHandleMouseDown = (event: React.MouseEvent, detection: DetectedSubImage) => {
     handleRotationStart(event, detection, overlayRef.current);
@@ -64,9 +51,6 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
         height={displayHeight}
         className="absolute top-0 left-0"
         style={{ width: displayWidth, height: displayHeight }}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseLeave}
       >
         {detectedImages.map((detection) => {
           const corners = getRotatedRectangleCorners(detection.boundingBox, detection.userRotation, scaleFactors);
