@@ -90,10 +90,14 @@ export function useRotationDrag({
     
     if (!svgElement) return;
     
+    // Get mouse position and center of bounding box
     const mousePos = getMousePositionRelativeToSVG(event, svgElement);
     const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
+    
+    // Calculate the start angle between mouse and center
     const startAngle = calculateAngleBetweenPoints(center.x, center.y, mousePos.x, mousePos.y);
     
+    // Store the initial state for dragging
     setDragState({
       detectionId: detection.id,
       startAngle,
