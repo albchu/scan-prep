@@ -100,6 +100,25 @@ export function getRotatedRectangleCorners(
 }
 
 /**
+ * Calculate rotation handle positions for all four corners
+ */
+export function getAllRotationHandlePositions(
+  corners: Point[],
+  center: Point,
+  handleOffset: number = 20
+): Point[] {
+  // The corners array has this order: [topLeft, topRight, bottomRight, bottomLeft]
+  return corners.map(corner => {
+    const angle = Math.atan2(corner.y - center.y, corner.x - center.x);
+    
+    return {
+      x: corner.x + Math.cos(angle) * handleOffset,
+      y: corner.y + Math.sin(angle) * handleOffset,
+    };
+  });
+}
+
+/**
  * Calculate rotation handle position (offset from top-right corner)
  */
 export function getRotationHandlePosition(

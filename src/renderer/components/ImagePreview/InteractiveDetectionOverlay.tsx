@@ -4,7 +4,7 @@ import {
   calculateScaleFactors,
   getBoundingBoxCenter,
   getRotatedRectangleCorners,
-  getRotationHandlePosition,
+  getAllRotationHandlePositions,
 } from '../../utils';
 import { useRotationDrag } from '../../hooks/useRotationDrag';
 import { DetectionShape } from './DetectionShape';
@@ -55,7 +55,7 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
         {detectedImages.map((detection) => {
           const corners = getRotatedRectangleCorners(detection.boundingBox, detection.userRotation, scaleFactors);
           const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
-          const handlePosition = getRotationHandlePosition(corners, center);
+          const handlePositions = getAllRotationHandlePositions(corners, center);
           
           return (
             <g key={detection.id}>
@@ -65,12 +65,16 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
                 center={center}
               />
               
-              <RotationHandle
-                detection={detection}
-                position={handlePosition}
-                corners={corners}
-                onMouseDown={onRotationHandleMouseDown}
-              />
+              {handlePositions.map((position, index) => (
+                <RotationHandle
+                  key={`${detection.id}-handle-${index}`}
+                  detection={detection}
+                  position={position}
+                  corners={corners}
+                  cornerIndex={index}
+                  onMouseDown={onRotationHandleMouseDown}
+                />
+              ))}
             </g>
           );
         })}

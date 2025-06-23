@@ -6,6 +6,7 @@ interface RotationHandleProps {
   detection: DetectedSubImage;
   position: Point;
   corners: Point[];
+  cornerIndex: number;
   onMouseDown: (event: React.MouseEvent, detection: DetectedSubImage) => void;
   strokeColor?: string;
   size?: number;
@@ -15,18 +16,20 @@ export const RotationHandle: React.FC<RotationHandleProps> = ({
   detection,
   position,
   corners,
+  cornerIndex,
   onMouseDown,
   strokeColor = '#ff6b35',
   size = 12,
 }) => {
-  const topRightCorner = corners[1]; // Top-right corner for connection line
+  // Get the corresponding corner for the connection line
+  const corner = corners[cornerIndex];
   
   return (
     <g>
       {/* Connection line from corner to handle */}
       <line
-        x1={topRightCorner.x}
-        y1={topRightCorner.y}
+        x1={corner.x}
+        y1={corner.y}
         x2={position.x}
         y2={position.y}
         stroke={strokeColor}
