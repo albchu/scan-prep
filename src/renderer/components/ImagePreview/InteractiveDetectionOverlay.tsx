@@ -13,6 +13,7 @@ interface InteractiveDetectionOverlayProps {
   displayWidth: number;
   displayHeight: number;
   onRotationChange: (detectionId: string, newRotation: number) => void;
+  onBackgroundClick: (event: React.MouseEvent<Element, MouseEvent>) => void;
 }
 
 export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayProps> = ({
@@ -22,6 +23,7 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
   displayWidth,
   displayHeight,
   onRotationChange,
+  onBackgroundClick,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -36,14 +38,23 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
   });
 
   const onDivMouseDown = (event: React.MouseEvent, detection: DetectedSubImage) => {
+    // Stop propagation here to prevent background click
+    event.stopPropagation();
     handleRotationStart(event, detection, overlayRef.current);
+  };
+
+  // Handle clicks on the overlay (not on detection boxes)
+  const handleOverlayClick = (event: React.MouseEvent) => {
+    // Forward the click to the parent component
+    onBackgroundClick(event);
   };
 
   return (
     <div 
       ref={overlayRef}
-      className="absolute inset-0" 
+      className="absolute inset-0 cursor-crosshair" 
       style={{ width: displayWidth, height: displayHeight }}
+      onClick={handleOverlayClick}
     >
       {detectedImages.map((detection) => {
         const { x, y, width, height } = detection.boundingBox;

@@ -86,7 +86,6 @@ export function useRotationDrag({
     containerElement: HTMLElement | null
   ) => {
     event.preventDefault();
-    event.stopPropagation();
     
     if (!containerElement) return;
     

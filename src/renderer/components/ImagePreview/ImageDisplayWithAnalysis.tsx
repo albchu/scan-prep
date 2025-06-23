@@ -161,7 +161,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
     }
   }, [clickDetections, debouncedUpdateViewportPreview]);
 
-  const handleImageClick = useCallback(async (event: React.MouseEvent<HTMLImageElement>) => {
+  const handleImageClick = useCallback(async (event: React.MouseEvent<Element, MouseEvent>) => {
     if (!imageRef.current || !imageData || isAnalyzing) return;
 
     // Get click coordinates relative to the image
@@ -239,6 +239,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
               displayWidth={displayDimensions.width}
               displayHeight={displayDimensions.height}
               onRotationChange={handleRotationChange}
+              onBackgroundClick={handleImageClick}
             />
           )}
         </div>
