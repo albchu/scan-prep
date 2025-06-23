@@ -25,30 +25,54 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
 
   const { generateViewportPreview, clearViewportPreviews } = useImageStore();
 
-  // Calculate display scale when image loads
-  useEffect(() => {
+  // Function to update display dimensions and scale
+  const updateDisplayDimensions = useCallback(() => {
     if (imageRef.current && imageData) {
       const rect = imageRef.current.getBoundingClientRect();
       const scale = Math.min(rect.width / imageData.width, rect.height / imageData.height);
+      
+      console.log('Updating display dimensions:', {
+        rectWidth: rect.width,
+        rectHeight: rect.height,
+        imageWidth: imageData.width,
+        imageHeight: imageData.height,
+        scale
+      });
+      
       setDisplayScale(scale);
       setDisplayDimensions({ width: rect.width, height: rect.height });
     }
-  }, [imageData, displayDimensions.width, displayDimensions.height]);
+  }, [imageData]);
+
+  // Update dimensions when image loads
+  useEffect(() => {
+    updateDisplayDimensions();
+  }, [imageData, updateDisplayDimensions]);
 
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
-      if (imageRef.current && imageData) {
-        const rect = imageRef.current.getBoundingClientRect();
-        const scale = Math.min(rect.width / imageData.width, rect.height / imageData.height);
-        setDisplayScale(scale);
-        setDisplayDimensions({ width: rect.width, height: rect.height });
-      }
+      updateDisplayDimensions();
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [imageData]);
+  }, [updateDisplayDimensions]);
+
+  // Also handle ResizeObserver for more responsive updates
+  useEffect(() => {
+    if (!imageRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateDisplayDimensions();
+    });
+
+    resizeObserver.observe(imageRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [updateDisplayDimensions]);
 
   // Generate viewport previews when detections change
   useEffect(() => {
@@ -161,17 +185,12 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
             style={{
               imageRendering: displayScale && displayScale < 0.5 ? 'pixelated' : 'auto',
             }}
-            onLoad={() => {
-              if (imageRef.current) {
-                const rect = imageRef.current.getBoundingClientRect();
-                setDisplayDimensions({ width: rect.width, height: rect.height });
-              }
-            }}
+            onLoad={updateDisplayDimensions}
             onClick={handleImageClick}
           />
           
           {/* Interactive detection overlay with rotation handles */}
-          {clickDetections.some(d => d.detectedImages.length > 0) && (
+          {clickDetections.some(d => d.detectedImages.length > 0) && displayDimensions.width > 0 && displayDimensions.height > 0 && (
             <InteractiveDetectionOverlay
               detectedImages={clickDetections.flatMap(d => d.detectedImages)}
               imageWidth={imageData.width}
