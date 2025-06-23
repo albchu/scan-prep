@@ -3,11 +3,8 @@ import { DetectedSubImage } from '@shared/types';
 import { 
   calculateScaleFactors,
   getBoundingBoxCenter,
-  getRotatedRectangleCorners,
 } from '../../utils';
 import { useRotationDrag } from '../../hooks/useRotationDrag';
-import { DetectionShape } from './DetectionShape';
-import { RotationHandle } from './RotationHandle';
 
 interface InteractiveDetectionOverlayProps {
   detectedImages: DetectedSubImage[];
@@ -26,7 +23,7 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
   displayHeight,
   onRotationChange,
 }) => {
-  const overlayRef = useRef<SVGSVGElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   // Calculate scale factors
   const scaleFactors = calculateScaleFactors(imageWidth, imageHeight, displayWidth, displayHeight);
@@ -38,45 +35,42 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
     onRotationChange,
   });
 
-  const onRotationHandleMouseDown = (event: React.MouseEvent, detection: DetectedSubImage) => {
+  const onDivMouseDown = (event: React.MouseEvent, detection: DetectedSubImage) => {
     handleRotationStart(event, detection, overlayRef.current);
   };
 
   return (
-    <div className="absolute inset-0 pointer-events-none" style={{ width: displayWidth, height: displayHeight }}>
-      <svg
-        ref={overlayRef}
-        width={displayWidth}
-        height={displayHeight}
-        className="absolute top-0 left-0"
-        style={{ width: displayWidth, height: displayHeight }}
-      >
-        {detectedImages.map((detection) => {
-          const corners = getRotatedRectangleCorners(detection.boundingBox, detection.userRotation, scaleFactors);
-          const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
-          
-          return (
-            <g key={detection.id}>
-              <DetectionShape
-                detection={detection}
-                corners={corners}
-                center={center}
-              />
-              
-              {/* Render rotation handles at each corner */}
-              {[0, 1, 2, 3].map((cornerIndex) => (
-                <RotationHandle
-                  key={`${detection.id}-handle-${cornerIndex}`}
-                  detection={detection}
-                  corners={corners}
-                  cornerIndex={cornerIndex}
-                  onMouseDown={onRotationHandleMouseDown}
-                />
-              ))}
-            </g>
-          );
-        })}
-      </svg>
+    <div 
+      ref={overlayRef}
+      className="absolute inset-0" 
+      style={{ width: displayWidth, height: displayHeight }}
+    >
+      {detectedImages.map((detection) => {
+        const { x, y, width, height } = detection.boundingBox;
+        const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
+        
+        // Scale the position and size to match the display size
+        const scaledX = x * scaleFactors.scaleX;
+        const scaledY = y * scaleFactors.scaleY;
+        const scaledWidth = width * scaleFactors.scaleX;
+        const scaledHeight = height * scaleFactors.scaleY;
+        
+        return (
+          <div
+            key={detection.id}
+            className="absolute border-2 border-blue-500 cursor-move pointer-events-auto"
+            style={{
+              left: `${scaledX}px`,
+              top: `${scaledY}px`,
+              width: `${scaledWidth}px`,
+              height: `${scaledHeight}px`,
+              transform: `rotate(${detection.userRotation}deg)`,
+              transformOrigin: `${center.x - scaledX}px ${center.y - scaledY}px`,
+            }}
+            onMouseDown={(event) => onDivMouseDown(event, detection)}
+          />
+        );
+      })}
     </div>
   );
 }; 

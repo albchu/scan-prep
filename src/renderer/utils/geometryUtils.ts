@@ -154,6 +154,22 @@ export function getMousePositionRelativeToSVG(
 }
 
 /**
+ * Get mouse position relative to any HTML element
+ */
+export function getMousePositionRelativeToElement(
+  event: React.MouseEvent | MouseEvent,
+  element: HTMLElement | null
+): Point {
+  if (!element) return { x: 0, y: 0 };
+  
+  const rect = element.getBoundingClientRect();
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+  };
+}
+
+/**
  * Create SVG path data for a polygon
  */
 export function createPolygonPath(points: Point[]): string {

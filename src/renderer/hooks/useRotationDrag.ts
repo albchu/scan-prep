@@ -4,7 +4,7 @@ import {
   calculateAngleBetweenPoints, 
   normalizeAngle, 
   getBoundingBoxCenter,
-  getMousePositionRelativeToSVG,
+  getMousePositionRelativeToElement,
   ScaleFactors
 } from '../utils';
 
@@ -12,7 +12,7 @@ interface DragState {
   detectionId: string;
   startAngle: number;
   startRotation: number;
-  svgElement: SVGSVGElement;
+  containerElement: HTMLElement;
 }
 
 interface UseRotationDragProps {
@@ -46,9 +46,9 @@ export function useRotationDrag({
       const detection = detectedImages.find(d => d.id === currentDragState.detectionId);
       if (!detection) return;
       
-      const mousePos = getMousePositionRelativeToSVG(
+      const mousePos = getMousePositionRelativeToElement(
         event, 
-        currentDragState.svgElement
+        currentDragState.containerElement
       );
       const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
       const currentAngle = calculateAngleBetweenPoints(center.x, center.y, mousePos.x, mousePos.y);
@@ -83,15 +83,15 @@ export function useRotationDrag({
   const handleRotationStart = useCallback((
     event: React.MouseEvent,
     detection: DetectedSubImage,
-    svgElement: SVGSVGElement | null
+    containerElement: HTMLElement | null
   ) => {
     event.preventDefault();
     event.stopPropagation();
     
-    if (!svgElement) return;
+    if (!containerElement) return;
     
     // Get mouse position and center of bounding box
-    const mousePos = getMousePositionRelativeToSVG(event, svgElement);
+    const mousePos = getMousePositionRelativeToElement(event, containerElement);
     const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
     
     // Calculate the start angle between mouse and center
@@ -102,14 +102,14 @@ export function useRotationDrag({
       detectionId: detection.id,
       startAngle,
       startRotation: detection.userRotation,
-      svgElement,
+      containerElement,
     });
   }, [scaleFactors]);
 
   /**
    * These functions are kept for API compatibility but functionality moved to document-level listeners
    */
-  const handleRotationDrag = useCallback((_event: React.MouseEvent, _svgElement: SVGSVGElement | null) => {
+  const handleRotationDrag = useCallback((_event: React.MouseEvent, _element: HTMLElement | null) => {
     // Local drag handling is no longer needed since we use document-level mousemove
   }, []);
 
