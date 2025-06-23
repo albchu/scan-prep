@@ -2,6 +2,13 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, DetectedSubImage } from '@shared/types';
 import { InteractiveDetectionOverlay } from './InteractiveDetectionOverlay';
 import { useImageStore } from '../../stores/imageStore';
+import { 
+  formatFileSize, 
+  calculateImageCoordinates, 
+  calculateDisplayScale, 
+  getImageRenderingStyle,
+  DebounceManager
+} from '../../utils';
 
 interface ImageDisplayWithAnalysisProps {
   imagePath: string;
@@ -25,7 +32,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
 
   // Track last viewport preview rotations to avoid unnecessary regeneration
   const lastPreviewRotations = useRef<Map<string, number>>(new Map());
-  const previewUpdateTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const debounceManager = useRef(new DebounceManager());
 
   const { generateViewportPreview, clearViewportPreviews } = useImageStore();
 
@@ -33,7 +40,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
   const updateDisplayDimensions = useCallback(() => {
     if (imageRef.current && imageData) {
       const rect = imageRef.current.getBoundingClientRect();
-      const scale = Math.min(rect.width / imageData.width, rect.height / imageData.height);
+      const scale = calculateDisplayScale(imageData.width, imageData.height, rect.width, rect.height);
       
       console.log('Updating display dimensions:', {
         rectWidth: rect.width,
@@ -80,31 +87,24 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
 
   // Debounced viewport preview update function
   const debouncedUpdateViewportPreview = useCallback((detectionId: string, detection: DetectedSubImage, delay: number = 300) => {
-    // Clear existing timeout for this detection
-    const existingTimeout = previewUpdateTimeouts.current.get(detectionId);
-    if (existingTimeout) {
-      clearTimeout(existingTimeout);
+    const lastRotation = lastPreviewRotations.current.get(detectionId);
+    const currentRotation = detection.userRotation;
+    
+    // Only update if rotation has changed significantly (more than 1 degree) or if it's the first time
+    if (lastRotation === undefined || Math.abs(currentRotation - lastRotation) > 1) {
+      debounceManager.current.debounce(
+        detectionId,
+        () => {
+          console.log(`Updating viewport preview for ${detectionId}: ${lastRotation}° → ${currentRotation}°`);
+          lastPreviewRotations.current.set(detectionId, currentRotation);
+          
+          if (imagePath) {
+            generateViewportPreview(imagePath, detection);
+          }
+        },
+        delay
+      );
     }
-
-    // Set new timeout
-    const timeout = setTimeout(() => {
-      const lastRotation = lastPreviewRotations.current.get(detectionId);
-      const currentRotation = detection.userRotation;
-      
-      // Only update if rotation has changed significantly (more than 1 degree) or if it's the first time
-      if (lastRotation === undefined || Math.abs(currentRotation - lastRotation) > 1) {
-        console.log(`Updating viewport preview for ${detectionId}: ${lastRotation}° → ${currentRotation}°`);
-        lastPreviewRotations.current.set(detectionId, currentRotation);
-        
-        if (imagePath) {
-          generateViewportPreview(imagePath, detection);
-        }
-      }
-      
-      previewUpdateTimeouts.current.delete(detectionId);
-    }, delay);
-
-    previewUpdateTimeouts.current.set(detectionId, timeout);
   }, [imagePath, generateViewportPreview]);
 
   // Generate viewport previews when detections change (initial creation only)
@@ -124,11 +124,17 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
   useEffect(() => {
     if (clickDetections.length === 0) {
       lastPreviewRotations.current.clear();
-      // Clear any pending timeouts
-      previewUpdateTimeouts.current.forEach(timeout => clearTimeout(timeout));
-      previewUpdateTimeouts.current.clear();
+      debounceManager.current.clearAll();
     }
   }, [clickDetections.length]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    const manager = debounceManager.current;
+    return () => {
+      manager.clearAll();
+    };
+  }, []);
 
   /**
    * Handle rotation change from the interactive overlay (now debounced)
@@ -163,16 +169,12 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
     const clickX = event.clientX - rect.left;
     const clickY = event.clientY - rect.top;
 
-    // Calculate the actual image coordinates (accounting for scaling)
-    const scaleX = imageData.width / rect.width;
-    const scaleY = imageData.height / rect.height;
-    
-    const actualX = Math.round(clickX * scaleX);
-    const actualY = Math.round(clickY * scaleY);
+    // Calculate the actual image coordinates
+    const imageCoords = calculateImageCoordinates(clickX, clickY, rect, imageData.width, imageData.height);
 
     console.log('Image clicked at:', { 
       displayCoords: { x: clickX, y: clickY },
-      actualCoords: { x: actualX, y: actualY },
+      actualCoords: imageCoords,
       imageSize: { width: imageData.width, height: imageData.height },
       displaySize: { width: rect.width, height: rect.height }
     });
@@ -183,8 +185,8 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
       const result = await window.electronAPI.invoke(
         ANALYSIS_IPC_CHANNELS.IMAGE_ANALYZE_CLICK,
         imagePath,
-        actualX,
-        actualY
+        imageCoords.x,
+        imageCoords.y
       );
 
       if (result.success) {
@@ -211,12 +213,6 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
     return null;
   }
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   return (
     <div ref={containerRef} className="flex flex-col h-full">
       {/* Image container with overlay */}
@@ -228,7 +224,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
             alt={fileName}
             className="max-w-full max-h-full object-contain rounded-lg shadow-2xl bg-dark-800 cursor-crosshair"
             style={{
-              imageRendering: displayScale && displayScale < 0.5 ? 'pixelated' : 'auto',
+              imageRendering: displayScale ? getImageRenderingStyle(displayScale) : 'auto',
             }}
             onLoad={updateDisplayDimensions}
             onClick={handleImageClick}
