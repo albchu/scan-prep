@@ -81,11 +81,34 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
   const generateViewportPreview = useCallback(async (imagePath: string, detection: DetectedSubImage) => {
     try {
       console.log('Invoking viewport preview with channel:', VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
+      
+      // Calculate aspect-ratio-preserving preview size
+      const { boundingBox } = detection;
+      const aspectRatio = boundingBox.width / boundingBox.height;
+      
+      // Target maximum dimension (for grid layout)
+      const maxDimension = 200;
+      
+      let previewWidth: number;
+      let previewHeight: number;
+      
+      if (aspectRatio > 1) {
+        // Landscape: width is larger
+        previewWidth = maxDimension;
+        previewHeight = Math.round(maxDimension / aspectRatio);
+      } else {
+        // Portrait or square: height is larger or equal
+        previewHeight = maxDimension;
+        previewWidth = Math.round(maxDimension * aspectRatio);
+      }
+      
+      console.log(`Preview size for ${detection.id}: ${previewWidth}x${previewHeight} (aspect ratio: ${aspectRatio.toFixed(2)})`);
+      
       const result = await window.electronAPI.invoke(
         VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW,
         imagePath,
         detection,
-        { width: 200, height: 200 }
+        { width: previewWidth, height: previewHeight }
       );
       
       if (result.success || !result.success) { // Include both success and error results

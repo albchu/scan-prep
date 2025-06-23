@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult } from '@shared/types';
+import { ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, DetectedSubImage } from '@shared/types';
 import { InteractiveDetectionOverlay } from './InteractiveDetectionOverlay';
 import { useImageStore } from '../../stores/imageStore';
 
@@ -22,6 +22,10 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
   const [displayScale, setDisplayScale] = useState<number | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clickDetections, setClickDetections] = useState<AnalysisResult[]>([]);
+
+  // Track last viewport preview rotations to avoid unnecessary regeneration
+  const lastPreviewRotations = useRef<Map<string, number>>(new Map());
+  const previewUpdateTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   const { generateViewportPreview, clearViewportPreviews } = useImageStore();
 
@@ -74,20 +78,63 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
     };
   }, [updateDisplayDimensions]);
 
-  // Generate viewport previews when detections change
+  // Debounced viewport preview update function
+  const debouncedUpdateViewportPreview = useCallback((detectionId: string, detection: DetectedSubImage, delay: number = 300) => {
+    // Clear existing timeout for this detection
+    const existingTimeout = previewUpdateTimeouts.current.get(detectionId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    // Set new timeout
+    const timeout = setTimeout(() => {
+      const lastRotation = lastPreviewRotations.current.get(detectionId);
+      const currentRotation = detection.userRotation;
+      
+      // Only update if rotation has changed significantly (more than 1 degree) or if it's the first time
+      if (lastRotation === undefined || Math.abs(currentRotation - lastRotation) > 1) {
+        console.log(`Updating viewport preview for ${detectionId}: ${lastRotation}° → ${currentRotation}°`);
+        lastPreviewRotations.current.set(detectionId, currentRotation);
+        
+        if (imagePath) {
+          generateViewportPreview(imagePath, detection);
+        }
+      }
+      
+      previewUpdateTimeouts.current.delete(detectionId);
+    }, delay);
+
+    previewUpdateTimeouts.current.set(detectionId, timeout);
+  }, [imagePath, generateViewportPreview]);
+
+  // Generate viewport previews when detections change (initial creation only)
   useEffect(() => {
     const allDetections = clickDetections.flatMap(d => d.detectedImages);
     allDetections.forEach(detection => {
-      if (imagePath) {
+      // Only generate preview if we haven't seen this detection before
+      if (!lastPreviewRotations.current.has(detection.id) && imagePath) {
+        console.log(`Initial viewport preview for ${detection.id}`);
+        lastPreviewRotations.current.set(detection.id, detection.userRotation);
         generateViewportPreview(imagePath, detection);
       }
     });
   }, [clickDetections, imagePath, generateViewportPreview]);
 
+  // Clean up tracking when detections are cleared
+  useEffect(() => {
+    if (clickDetections.length === 0) {
+      lastPreviewRotations.current.clear();
+      // Clear any pending timeouts
+      previewUpdateTimeouts.current.forEach(timeout => clearTimeout(timeout));
+      previewUpdateTimeouts.current.clear();
+    }
+  }, [clickDetections.length]);
+
   /**
-   * Handle rotation change from the interactive overlay
+   * Handle rotation change from the interactive overlay (now debounced)
    */
   const handleRotationChange = useCallback((detectionId: string, newRotation: number) => {
+    // Update the detection state immediately for smooth UI
     setClickDetections(prev => prev.map(result => ({
       ...result,
       detectedImages: result.detectedImages.map(detection => 
@@ -97,18 +144,16 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
       )
     })));
 
-    // Update the specific viewport preview
+    // Find the updated detection and debounce the viewport preview update
     const updatedDetection = clickDetections
       .flatMap(d => d.detectedImages)
       .find(d => d.id === detectionId);
       
-    if (updatedDetection && imagePath) {
-      generateViewportPreview(imagePath, {
-        ...updatedDetection,
-        userRotation: newRotation
-      });
+    if (updatedDetection) {
+      const detectionWithNewRotation = { ...updatedDetection, userRotation: newRotation };
+      debouncedUpdateViewportPreview(detectionId, detectionWithNewRotation);
     }
-  }, [clickDetections, imagePath, generateViewportPreview]);
+  }, [clickDetections, debouncedUpdateViewportPreview]);
 
   const handleImageClick = useCallback(async (event: React.MouseEvent<HTMLImageElement>) => {
     if (!imageRef.current || !imageData || isAnalyzing) return;

@@ -24,6 +24,10 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
       </div>
     );
   }
+
+  const aspectRatio = originalDetection.boundingBox.width / originalDetection.boundingBox.height;
+  const isLandscape = aspectRatio > 1;
+  const isPortrait = aspectRatio < 1;
   
   return (
     <div className="viewport-preview">
@@ -32,6 +36,12 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
           src={base64} 
           alt={`Viewport preview ${originalDetection.id}`}
           className="preview-image"
+          style={{
+            maxWidth: '100%',
+            maxHeight: '200px',
+            width: 'auto',
+            height: 'auto'
+          }}
         />
       </div>
       
@@ -45,6 +55,15 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
           </span>
         </div>
         
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-dark-400">
+            {Math.round(originalDetection.boundingBox.width)}×{Math.round(originalDetection.boundingBox.height)} region
+          </span>
+          <span className="text-dark-500">
+            {isLandscape ? '🔄' : isPortrait ? '📱' : '⬜'} {aspectRatio.toFixed(2)}
+          </span>
+        </div>
+        
         {Math.abs(originalDetection.userRotation) > 1 && (
           <div className="mt-1">
             <span className="rotation-indicator text-orange-400">
@@ -52,10 +71,6 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
             </span>
           </div>
         )}
-        
-        <div className="mt-1 text-xs text-dark-400">
-          {Math.round(originalDetection.boundingBox.width)}×{Math.round(originalDetection.boundingBox.height)} region
-        </div>
       </div>
     </div>
   );
