@@ -194,39 +194,49 @@ export class ImageAnalysisService {
       return scaledImage.toDataURL();
     }
     
-    // Calculate expanded region that encompasses the rotated frame
-    const expandedRegion = this.calculateExpandedRegion(
-      detection.boundingBox,
-      detection.userRotation,
-      sourceImage.width,
-      sourceImage.height
-    );
+    // Calculate the center of the bounding box in the original image
+    const centerX = detection.boundingBox.x + detection.boundingBox.width / 2;
+    const centerY = detection.boundingBox.y + detection.boundingBox.height / 2;
     
-    // Crop the expanded region
-    const croppedImage = sourceImage.crop({
-      x: expandedRegion.x,
-      y: expandedRegion.y,
-      width: expandedRegion.width,
-      height: expandedRegion.height
+    // Rotate the entire image (negative angle to straighten content)
+    // Note: the image-js library rotates around the center of the image
+    const rotatedImage = sourceImage.rotate(-detection.userRotation);
+    
+    // Calculate the transformation from original to rotated coordinates
+    // The rotation center in the original image is sourceImage.width/2, sourceImage.height/2
+    // After rotation, this point becomes rotatedImage.width/2, rotatedImage.height/2
+    
+    // Calculate the vector from image center to bounding box center in the original image
+    const vectorX = centerX - sourceImage.width / 2;
+    const vectorY = centerY - sourceImage.height / 2;
+    
+    // Calculate the angle in radians for the rotation
+    const angleRad = (-detection.userRotation * Math.PI) / 180;
+    const cosAngle = Math.cos(angleRad);
+    const sinAngle = Math.sin(angleRad);
+    
+    // Rotate this vector to find where the bounding box center is in the rotated image
+    const rotatedVectorX = vectorX * cosAngle - vectorY * sinAngle;
+    const rotatedVectorY = vectorX * sinAngle + vectorY * cosAngle;
+    
+    // Calculate the new center position in the rotated image
+    const rotatedCenterX = rotatedImage.width / 2 + rotatedVectorX;
+    const rotatedCenterY = rotatedImage.height / 2 + rotatedVectorY;
+    
+    // Calculate crop coordinates (centered on the rotated box center)
+    const cropX = Math.round(rotatedCenterX - detection.boundingBox.width / 2);
+    const cropY = Math.round(rotatedCenterY - detection.boundingBox.height / 2);
+    
+    // Crop to the exact bounding box dimensions
+    const croppedImage = rotatedImage.crop({
+      x: Math.max(0, cropX),
+      y: Math.max(0, cropY),
+      width: Math.min(rotatedImage.width - cropX, detection.boundingBox.width),
+      height: Math.min(rotatedImage.height - cropY, detection.boundingBox.height)
     });
     
-    // Apply counter-rotation to straighten the content (negative of user rotation)
-    const straightenedImage = croppedImage.rotate(-detection.userRotation);
-    
-    // Calculate the center region that represents the original bounding box content
-    const centerX = Math.max(0, (straightenedImage.width - detection.boundingBox.width) / 2);
-    const centerY = Math.max(0, (straightenedImage.height - detection.boundingBox.height) / 2);
-    
-    // Crop to the final viewport size
-    const finalViewport = straightenedImage.crop({
-      x: Math.round(centerX),
-      y: Math.round(centerY),
-      width: Math.min(Math.round(detection.boundingBox.width), straightenedImage.width - Math.round(centerX)),
-      height: Math.min(Math.round(detection.boundingBox.height), straightenedImage.height - Math.round(centerY))
-    });
-    
-    // Scale to preview size while maintaining aspect ratio
-    const scaledImage = finalViewport.resize({
+    // Scale to final preview size
+    const scaledImage = croppedImage.resize({
       width: previewSize.width,
       height: previewSize.height
     });
@@ -282,7 +292,10 @@ export class ImageAnalysisService {
     const maxY = Math.min(imageHeight, Math.max(...corners.map(c => c.y)));
     
     // Add padding to ensure we capture enough content for rotation
-    const padding = Math.max(boundingBox.width, boundingBox.height) * 0.2;
+    // Increase padding for larger rotation angles
+    const rotationFactor = Math.min(1, Math.abs(rotationDegrees) / 90);
+    const basePadding = Math.max(boundingBox.width, boundingBox.height) * 0.2;
+    const padding = basePadding * (1 + rotationFactor);
     
     return {
       x: Math.round(Math.max(0, minX - padding)),
