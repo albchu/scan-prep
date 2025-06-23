@@ -47,10 +47,10 @@ export const HierarchicalFileList: React.FC<Props> = ({
       setLoading((prev) => new Set(prev).add(dirPath));
 
       try {
-        const entries: DirectoryEntry[] = await window.electronAPI.invoke(
+        const entries = await window.electronAPI.invoke(
           IPC_CHANNELS.FILE_READ_DIRECTORY,
           dirPath
-        );
+        ) as DirectoryEntry[];
         const children: TreeNode[] = entries.map((e) => ({
           ...e,
           level,

@@ -18,7 +18,7 @@ interface TreeNode extends DirectoryEntry {
 declare global {
   interface Window {
     electronAPI: {
-      invoke: (channel: string, ...args: any[]) => Promise<any>;
+      invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
     };
   }
 }
@@ -99,12 +99,42 @@ export const DirectoryTree: React.FC<DirectoryTreeProps> = ({
   const [treeNodes, setTreeNodes] = useState<TreeNode[]>([]);
   const [loadingPaths, setLoadingPaths] = useState<Set<string>>(new Set());
 
-  // Initialize tree with root directory
-  useEffect(() => {
-    if (rootPath) {
-      loadDirectory(rootPath, 0);
-    }
-  }, [rootPath]);
+  const updateTreeNodes = useCallback((nodes: TreeNode[], targetPath: string, children: TreeNode[]): TreeNode[] => {
+    return nodes.map(node => {
+      if (node.path === targetPath) {
+        return {
+          ...node,
+          children,
+          isExpanded: true
+        };
+      }
+      if (node.children) {
+        return {
+          ...node,
+          children: updateTreeNodes(node.children, targetPath, children)
+        };
+      }
+      return node;
+    });
+  }, []);
+
+  const toggleNodeExpansion = useCallback((nodes: TreeNode[], targetPath: string): TreeNode[] => {
+    return nodes.map(node => {
+      if (node.path === targetPath) {
+        return {
+          ...node,
+          isExpanded: !node.isExpanded
+        };
+      }
+      if (node.children) {
+        return {
+          ...node,
+          children: toggleNodeExpansion(node.children, targetPath)
+        };
+      }
+      return node;
+    });
+  }, []);
 
   const loadDirectory = useCallback(async (dirPath: string, level: number) => {
     if (loadingPaths.has(dirPath)) {
@@ -114,7 +144,7 @@ export const DirectoryTree: React.FC<DirectoryTreeProps> = ({
     setLoadingPaths(prev => new Set(prev).add(dirPath));
 
     try {
-      const entries = await window.electronAPI.invoke(IPC_CHANNELS.FILE_READ_DIRECTORY, dirPath);
+      const entries = await window.electronAPI.invoke(IPC_CHANNELS.FILE_READ_DIRECTORY, dirPath) as DirectoryEntry[];
       const directories = entries.filter((entry: DirectoryEntry) => entry.isDirectory);
       const imageFiles = entries.filter((entry: DirectoryEntry) => !entry.isDirectory && entry.isSupported);
       
@@ -147,26 +177,7 @@ export const DirectoryTree: React.FC<DirectoryTreeProps> = ({
         return newSet;
       });
     }
-  }, [loadingPaths]);
-
-  const updateTreeNodes = (nodes: TreeNode[], targetPath: string, children: TreeNode[]): TreeNode[] => {
-    return nodes.map(node => {
-      if (node.path === targetPath) {
-        return {
-          ...node,
-          children,
-          isExpanded: true
-        };
-      }
-      if (node.children) {
-        return {
-          ...node,
-          children: updateTreeNodes(node.children, targetPath, children)
-        };
-      }
-      return node;
-    });
-  };
+  }, [loadingPaths, currentPath, updateTreeNodes]);
 
   const toggleDirectory = useCallback(async (node: TreeNode) => {
     if (!node.isExpanded && !node.children) {
@@ -176,25 +187,14 @@ export const DirectoryTree: React.FC<DirectoryTreeProps> = ({
       // Just toggle expansion
       setTreeNodes(prevNodes => toggleNodeExpansion(prevNodes, node.path));
     }
-  }, [loadDirectory]);
+  }, [loadDirectory, toggleNodeExpansion]);
 
-  const toggleNodeExpansion = (nodes: TreeNode[], targetPath: string): TreeNode[] => {
-    return nodes.map(node => {
-      if (node.path === targetPath) {
-        return {
-          ...node,
-          isExpanded: !node.isExpanded
-        };
-      }
-      if (node.children) {
-        return {
-          ...node,
-          children: toggleNodeExpansion(node.children, targetPath)
-        };
-      }
-      return node;
-    });
-  };
+  // Initialize tree with root directory
+  useEffect(() => {
+    if (rootPath) {
+      loadDirectory(rootPath, 0);
+    }
+  }, [rootPath, loadDirectory]);
 
   // No directory selection—clicking nodes will only toggle expand/collapse
   const handleNodeClick = useCallback((node: TreeNode) => {
@@ -258,9 +258,9 @@ export const DirectoryTree: React.FC<DirectoryTreeProps> = ({
         </div>
 
         {/* Children */}
-        {node.isExpanded && hasChildren && (
+        {node.isExpanded && hasChildren && node.children && (
           <div>
-            {node.children!.map(child => renderTreeNode(child))}
+            {node.children.map(child => renderTreeNode(child))}
           </div>
         )}
       </div>

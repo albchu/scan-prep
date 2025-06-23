@@ -37,10 +37,10 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
 
     try {
       // Call IPC to load image
-      const result: ImageLoadResult = await window.electronAPI.invoke(
+      const result = await window.electronAPI.invoke(
         IMAGE_IPC_CHANNELS.IMAGE_LOAD,
         imagePath
-      );
+      ) as ImageLoadResult;
 
       if (result.success && result.data) {
         setState({
@@ -109,7 +109,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
         imagePath,
         detection,
         { width: previewWidth, height: previewHeight }
-      );
+      ) as ViewportPreviewResult;
       
       if (result.success || !result.success) { // Include both success and error results
         setState(prev => ({

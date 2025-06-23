@@ -40,7 +40,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, onFileSelect
 
     try {
       console.log('Loading directory:', newPath);
-      const entries = await window.electronAPI.invoke(IPC_CHANNELS.FILE_READ_DIRECTORY, newPath);
+      const entries = await window.electronAPI.invoke(IPC_CHANNELS.FILE_READ_DIRECTORY, newPath) as DirectoryEntry[];
       setDirectoryEntries(entries);
       console.log(`Loaded ${entries.length} entries`);
     } catch (error) {

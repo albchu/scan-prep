@@ -187,7 +187,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
         imagePath,
         imageCoords.x,
         imageCoords.y
-      );
+      ) as AnalysisResult;
 
       if (result.success) {
         setClickDetections(prev => [...prev, result]);

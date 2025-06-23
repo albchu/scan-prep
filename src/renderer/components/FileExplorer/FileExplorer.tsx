@@ -8,7 +8,7 @@ import { FileListError, FileListNoDir } from './FileListStates';
 declare global {
   interface Window {
     electronAPI: {
-      invoke: (channel: string, ...args: any[]) => Promise<any>;
+      invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
     };
   }
 }

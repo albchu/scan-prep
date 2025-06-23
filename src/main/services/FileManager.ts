@@ -78,13 +78,14 @@ export class FileManager {
       };
     } catch (error) {
       if (error instanceof Error) {
-        if ((error as any).code === 'ENOENT') {
+        const nodeError = error as NodeJS.ErrnoException;
+        if (nodeError.code === 'ENOENT') {
           return {
             isValid: false,
             error: 'Directory does not exist'
           };
         }
-        if ((error as any).code === 'EACCES') {
+        if (nodeError.code === 'EACCES') {
           return {
             isValid: false,
             error: 'Permission denied'
@@ -104,7 +105,7 @@ export class FileManager {
    * @returns Whether the extension is supported
    */
   private isSupportedImageFormat(ext: string): boolean {
-    return APP_CONSTANTS.SUPPORTED_IMAGE_FORMATS.includes(ext as any);
+    return APP_CONSTANTS.SUPPORTED_IMAGE_FORMATS.includes(ext as typeof APP_CONSTANTS.SUPPORTED_IMAGE_FORMATS[number]);
   }
 
   /**

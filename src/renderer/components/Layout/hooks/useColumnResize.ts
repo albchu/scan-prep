@@ -37,15 +37,16 @@ export const useColumnResize = (
     rightWidth: 0,
   });
 
-  // Ensure widths always sum to 100%
+  // Ensure widths always sum to 100% (only run on initial mount)
   useEffect(() => {
     const total = leftWidth + middleWidth + rightWidth;
     if (Math.abs(total - 100) > 0.1) {
       const scale = 100 / total;
-      setLeftWidth(leftWidth * scale);
-      setMiddleWidth(middleWidth * scale);
-      setRightWidth(rightWidth * scale);
+      setLeftWidth(prev => prev * scale);
+      setMiddleWidth(prev => prev * scale);
+      setRightWidth(prev => prev * scale);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startResize = useCallback((e: React.MouseEvent, side: 'left' | 'right') => {
