@@ -2,7 +2,7 @@ import { ipcMain } from 'electron';
 import { FileManager } from './services/FileManager';
 import { ImageProcessor } from './services/ImageProcessor';
 import { ImageAnalysisService } from './services/ImageAnalysisService';
-import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, IMAGE_IPC_CHANNELS, ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, AnalysisOptions } from '@shared/types';
+import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, IMAGE_IPC_CHANNELS, ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, AnalysisOptions, VIEWPORT_IPC_CHANNELS, ViewportPreviewResult, DetectedSubImage } from '@shared/types';
 
 export class IPCHandlers {
   private fileManager: FileManager;
@@ -17,6 +17,8 @@ export class IPCHandlers {
   }
 
   private registerHandlers(): void {
+    console.log('Registering IPC handlers...');
+    
     // Handle directory reading requests
     ipcMain.handle(IPC_CHANNELS.FILE_READ_DIRECTORY, async (event, path: string): Promise<DirectoryEntry[]> => {
       try {
@@ -75,8 +77,6 @@ export class IPCHandlers {
       }
     });
 
-
-
     // Phase 5: Handle click-based image analysis requests
     ipcMain.handle(ANALYSIS_IPC_CHANNELS.IMAGE_ANALYZE_CLICK, async (event, imagePath: string, clickX: number, clickY: number, options?: Partial<AnalysisOptions>): Promise<AnalysisResult> => {
       try {
@@ -96,6 +96,27 @@ export class IPCHandlers {
         };
       }
     });
+
+    // Handle viewport preview generation
+    console.log('Registering viewport preview handler for channel:', VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
+    ipcMain.handle(VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW, async (event, imagePath: string, detection: DetectedSubImage, previewSize: { width: number; height: number }): Promise<ViewportPreviewResult> => {
+      try {
+        console.log('Generating viewport preview for:', imagePath, 'detection:', detection.id, 'size:', previewSize);
+        const result = await this.imageAnalysisService.generateViewportPreview(imagePath, detection, previewSize);
+        console.log(`Viewport preview result: ${result.success ? 'success' : 'failed'}`);
+        return result;
+      } catch (error) {
+        console.error('Error generating viewport preview:', error);
+        return {
+          success: false,
+          id: detection.id,
+          originalDetection: detection,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    });
+    
+    console.log('All IPC handlers registered successfully');
   }
 
   /**
@@ -110,5 +131,7 @@ export class IPCHandlers {
     ipcMain.removeHandler(IMAGE_IPC_CHANNELS.IMAGE_LOAD);
     // Phase 5: Remove analysis handlers
     ipcMain.removeHandler(ANALYSIS_IPC_CHANNELS.IMAGE_ANALYZE_CLICK);
+    // Remove viewport preview handler
+    ipcMain.removeHandler(VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
   }
 } 

@@ -2,11 +2,15 @@ import React, { useState, useCallback } from 'react';
 import { ThreeColumnLayout } from './components/Layout/ThreeColumnLayout';
 import { FileExplorer } from './components/FileExplorer/FileExplorer';
 import { ImagePreview } from './components/ImagePreview/ImagePreview';
-import { SubImageGridPlaceholder } from './components/SubImageGrid/SubImageGridPlaceholder';
+import { SubImageGrid } from './components/SubImageGrid/SubImageGrid';
 import { AppProvider } from './AppContext';
+import { useImageStore, ImageStoreProvider } from './stores/imageStore';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const [selectedImagePath, setSelectedImagePath] = useState<string | null>(null);
+  const { viewportPreviews } = useImageStore();
+
+  console.log('App: viewport previews from store:', viewportPreviews.length, viewportPreviews);
 
   const handleFileSelect = useCallback((filePath: string) => {
     setSelectedImagePath(filePath);
@@ -19,7 +23,7 @@ const App: React.FC = () => {
         <ThreeColumnLayout
           leftColumn={<FileExplorer />}
           middleColumn={<ImagePreview selectedImage={selectedImagePath} />}
-          rightColumn={<SubImageGridPlaceholder />}
+          rightColumn={<SubImageGrid viewportPreviews={viewportPreviews} />}
           minLeftWidth={250}
           minMiddleWidth={400}
           minRightWidth={300}
@@ -29,6 +33,14 @@ const App: React.FC = () => {
         />
       </AppProvider>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ImageStoreProvider>
+      <AppContent />
+    </ImageStoreProvider>
   );
 };
 

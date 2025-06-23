@@ -142,6 +142,7 @@ export interface ImageState {
   error: string | null;
   imageData: ImageLoadResult['data'] | null;
   selectedPath: string | null;
+  viewportPreviews: ViewportPreviewResult[];
 }
 
 // Phase 4: Image operations
@@ -220,4 +221,28 @@ export interface UserDetectedSubImage extends DetectedSubImage {
 export interface UserAnalysisResult extends Omit<AnalysisResult, 'detectedImages'> {
   detectedImages: UserDetectedSubImage[];
   clickPoints: ClickCoordinate[];
-} 
+}
+
+// Viewport preview types for sub-image extraction
+export interface ViewportPreviewResult {
+  success: boolean;
+  id: string;
+  base64?: string;
+  width?: number;
+  height?: number;
+  originalDetection: DetectedSubImage;
+  error?: string;
+}
+
+export interface ViewportOperations {
+  'image:generate-viewport-preview': (
+    imagePath: string, 
+    detection: DetectedSubImage,
+    previewSize: { width: number; height: number }
+  ) => Promise<ViewportPreviewResult>;
+}
+
+// Add viewport IPC channels
+export const VIEWPORT_IPC_CHANNELS = {
+  GENERATE_VIEWPORT_PREVIEW: 'image:generate-viewport-preview',
+} as const; 

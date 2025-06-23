@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult } from '@shared/types';
 import { InteractiveDetectionOverlay } from './InteractiveDetectionOverlay';
+import { useImageStore } from '../../stores/imageStore';
 
 interface ImageDisplayWithAnalysisProps {
   imagePath: string;
@@ -21,6 +22,8 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
   const [displayScale, setDisplayScale] = useState<number | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clickDetections, setClickDetections] = useState<AnalysisResult[]>([]);
+
+  const { generateViewportPreview, clearViewportPreviews } = useImageStore();
 
   // Calculate display scale when image loads
   useEffect(() => {
@@ -47,6 +50,16 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
     return () => window.removeEventListener('resize', handleResize);
   }, [imageData]);
 
+  // Generate viewport previews when detections change
+  useEffect(() => {
+    const allDetections = clickDetections.flatMap(d => d.detectedImages);
+    allDetections.forEach(detection => {
+      if (imagePath) {
+        generateViewportPreview(imagePath, detection);
+      }
+    });
+  }, [clickDetections, imagePath, generateViewportPreview]);
+
   /**
    * Handle rotation change from the interactive overlay
    */
@@ -59,7 +72,19 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
           : detection
       )
     })));
-  }, []);
+
+    // Update the specific viewport preview
+    const updatedDetection = clickDetections
+      .flatMap(d => d.detectedImages)
+      .find(d => d.id === detectionId);
+      
+    if (updatedDetection && imagePath) {
+      generateViewportPreview(imagePath, {
+        ...updatedDetection,
+        userRotation: newRotation
+      });
+    }
+  }, [clickDetections, imagePath, generateViewportPreview]);
 
   const handleImageClick = useCallback(async (event: React.MouseEvent<HTMLImageElement>) => {
     if (!imageRef.current || !imageData || isAnalyzing) return;
@@ -107,6 +132,11 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
       setIsAnalyzing(false);
     }
   }, [imagePath, imageData, isAnalyzing]);
+
+  const handleClearDetections = useCallback(() => {
+    setClickDetections([]);
+    clearViewportPreviews();
+  }, [clearViewportPreviews]);
 
   if (!imageData) {
     return null;
@@ -193,7 +223,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
           
           {clickDetections.length > 0 && (
             <button
-              onClick={() => setClickDetections([])}
+              onClick={handleClearDetections}
               className="w-full px-3 py-2 text-sm bg-dark-700 hover:bg-dark-600 text-dark-200 rounded-lg transition-colors"
               disabled={isAnalyzing}
             >

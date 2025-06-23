@@ -4,6 +4,8 @@ import {
   AnalysisOptions,
   DEFAULT_ANALYSIS_OPTIONS,
   DetectedSubImage,
+  ViewportPreviewResult,
+  BoundingBox,
 } from '@shared/types';
 import {
   detectBoundaryPoints,
@@ -121,5 +123,172 @@ export class ImageAnalysisService {
     }
 
     return detectedImage;
+  }
+
+  /**
+   * Generate viewport preview for a detected region
+   * @param imagePath - Source image path
+   * @param detection - Detection with rotation information
+   * @param previewSize - Target size for the preview (e.g., 200x200)
+   * @returns Base64 encoded viewport preview
+   */
+  async generateViewportPreview(
+    imagePath: string, 
+    detection: DetectedSubImage,
+    previewSize: { width: number; height: number }
+  ): Promise<ViewportPreviewResult> {
+    try {
+      console.log('Generating viewport preview for detection:', detection.id, 'with rotation:', detection.userRotation);
+      
+      // Load the source image
+      const sourceImage = await Image.load(imagePath);
+      
+      // Generate viewport preview with content straightened (counter-rotated)
+      const base64 = await this.generateViewportPreviewInternal(
+        sourceImage,
+        detection,
+        previewSize
+      );
+      
+      return {
+        success: true,
+        id: detection.id,
+        base64,
+        width: previewSize.width,
+        height: previewSize.height,
+        originalDetection: detection,
+      };
+    } catch (error) {
+      console.error('Error generating viewport preview:', error);
+      return {
+        success: false,
+        id: detection.id,
+        originalDetection: detection,
+        error: error instanceof Error ? error.message : 'Unknown error during viewport preview generation',
+      };
+    }
+  }
+
+  /**
+   * Internal method to generate viewport preview with content straightened
+   */
+  private async generateViewportPreviewInternal(
+    sourceImage: Image,
+    detection: DetectedSubImage,
+    previewSize: { width: number; height: number }
+  ): Promise<string> {
+    // If no rotation, use simple crop and scale
+    if (Math.abs(detection.userRotation) < 1) {
+      const croppedImage = sourceImage.crop({
+        x: Math.round(detection.boundingBox.x),
+        y: Math.round(detection.boundingBox.y),
+        width: Math.round(detection.boundingBox.width),
+        height: Math.round(detection.boundingBox.height)
+      });
+      
+      const scaledImage = croppedImage.resize({
+        width: previewSize.width,
+        height: previewSize.height
+      });
+      
+      return scaledImage.toDataURL();
+    }
+    
+    // Calculate expanded region that encompasses the rotated frame
+    const expandedRegion = this.calculateExpandedRegion(
+      detection.boundingBox,
+      detection.userRotation,
+      sourceImage.width,
+      sourceImage.height
+    );
+    
+    // Crop the expanded region
+    const croppedImage = sourceImage.crop({
+      x: expandedRegion.x,
+      y: expandedRegion.y,
+      width: expandedRegion.width,
+      height: expandedRegion.height
+    });
+    
+    // Apply counter-rotation to straighten the content (negative of user rotation)
+    const straightenedImage = croppedImage.rotate(-detection.userRotation);
+    
+    // Calculate the center region that represents the original bounding box content
+    const centerX = Math.max(0, (straightenedImage.width - detection.boundingBox.width) / 2);
+    const centerY = Math.max(0, (straightenedImage.height - detection.boundingBox.height) / 2);
+    
+    // Crop to the final viewport size
+    const finalViewport = straightenedImage.crop({
+      x: Math.round(centerX),
+      y: Math.round(centerY),
+      width: Math.min(Math.round(detection.boundingBox.width), straightenedImage.width - Math.round(centerX)),
+      height: Math.min(Math.round(detection.boundingBox.height), straightenedImage.height - Math.round(centerY))
+    });
+    
+    // Scale to preview size while maintaining aspect ratio
+    const scaledImage = finalViewport.resize({
+      width: previewSize.width,
+      height: previewSize.height
+    });
+    
+    // Convert to base64
+    return scaledImage.toDataURL();
+  }
+
+  /**
+   * Calculate rotated corner coordinates
+   */
+  private calculateRotatedCorners(
+    boundingBox: BoundingBox, 
+    rotationDegrees: number
+  ): { x: number; y: number }[] {
+    const centerX = boundingBox.x + boundingBox.width / 2;
+    const centerY = boundingBox.y + boundingBox.height / 2;
+    
+    const angleRad = (rotationDegrees * Math.PI) / 180;
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+    
+    const halfWidth = boundingBox.width / 2;
+    const halfHeight = boundingBox.height / 2;
+    
+    return [
+      { x: -halfWidth, y: -halfHeight }, // Top-left
+      { x: halfWidth, y: -halfHeight },  // Top-right
+      { x: halfWidth, y: halfHeight },   // Bottom-right
+      { x: -halfWidth, y: halfHeight },  // Bottom-left
+    ].map(corner => ({
+      x: centerX + corner.x * cos - corner.y * sin,
+      y: centerY + corner.x * sin + corner.y * cos,
+    }));
+  }
+
+  /**
+   * Calculate expanded region that encompasses the rotated overlay frame
+   */
+  private calculateExpandedRegion(
+    boundingBox: BoundingBox, 
+    rotationDegrees: number,
+    imageWidth: number,
+    imageHeight: number
+  ): BoundingBox {
+    // Get the rotated corners of the overlay frame
+    const corners = this.calculateRotatedCorners(boundingBox, rotationDegrees);
+    
+    // Find the minimum bounding rectangle that contains all corners
+    const minX = Math.max(0, Math.min(...corners.map(c => c.x)));
+    const minY = Math.max(0, Math.min(...corners.map(c => c.y)));
+    const maxX = Math.min(imageWidth, Math.max(...corners.map(c => c.x)));
+    const maxY = Math.min(imageHeight, Math.max(...corners.map(c => c.y)));
+    
+    // Add padding to ensure we capture enough content for rotation
+    const padding = Math.max(boundingBox.width, boundingBox.height) * 0.2;
+    
+    return {
+      x: Math.round(Math.max(0, minX - padding)),
+      y: Math.round(Math.max(0, minY - padding)),
+      width: Math.round(Math.min(imageWidth, maxX + padding) - Math.max(0, minX - padding)),
+      height: Math.round(Math.min(imageHeight, maxY + padding) - Math.max(0, minY - padding))
+    };
   }
 } 

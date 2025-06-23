@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       'image:load',
       // Phase 5 channels
       'image:analyze-click',
+      // Viewport preview channels
+      'image:generate-viewport-preview',
     ];
     
     if (allowedChannels.includes(channel)) {

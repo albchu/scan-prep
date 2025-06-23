@@ -18,7 +18,6 @@ export const FileExplorer: React.FC = () => {
     currentPath,
     selectedFile,
     directoryEntries,
-    isLoadingDirectory,
     errorMessage,
     handleFileSelect,
   } = useApp();

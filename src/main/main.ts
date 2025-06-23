@@ -131,7 +131,7 @@ class Application {
       const mainWindow = this.windowManager.createMainWindow();
       
       // Handle window close event
-      mainWindow.on('close', (event) => {
+      mainWindow.on('close', (_event) => {
         // Always quit the app when window is closed, regardless of platform
         // This ensures the terminal process is killed when the window is closed
         this.quit();
