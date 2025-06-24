@@ -1,12 +1,8 @@
-// Window management types
-export interface WindowBounds {
+export interface WindowOptions {
   x?: number;
   y?: number;
   width: number;
   height: number;
-}
-
-export interface WindowOptions extends WindowBounds {
   minWidth?: number;
   minHeight?: number;
   show?: boolean;
@@ -42,9 +38,12 @@ export interface EnhancedFileInfo extends DirectoryEntry {
 
 // IPC channel definitions for type safety
 export const IPC_CHANNELS = {
+  FILE_GET_FILE_INFO: 'file:get-file-info',
   FILE_READ_DIRECTORY: 'file:read-directory',
   FILE_VALIDATE_PATH: 'file:validate-path',
-  FILE_GET_FILE_INFO: 'file:get-file-info',
+  GENERATE_VIEWPORT_PREVIEW: 'image:generate-viewport-preview',
+  IMAGE_ANALYZE_CLICK: 'image:analyze-click',
+  IMAGE_LOAD: 'image:load',
 } as const;
 
 export const ERROR_CODES = {
@@ -102,10 +101,6 @@ export interface ImageState {
   viewportPreviews: ViewportPreviewResult[];
 }
 
-export const IMAGE_IPC_CHANNELS = {
-  IMAGE_LOAD: 'image:load',
-} as const;
-
 export interface BoundingBox {
   x: number;
   y: number;
@@ -143,10 +138,6 @@ export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptions = {
   edgeSensitivity: 0.5,
 };
 
-export const ANALYSIS_IPC_CHANNELS = {
-  IMAGE_ANALYZE_CLICK: 'image:analyze-click',
-} as const;
-
 export interface ClickCoordinate {
   x: number;
   y: number;
@@ -160,8 +151,4 @@ export interface ViewportPreviewResult {
   height?: number;
   originalDetection: ViewportFrame;
   error?: string;
-}
-
-export const VIEWPORT_IPC_CHANNELS = {
-  GENERATE_VIEWPORT_PREVIEW: 'image:generate-viewport-preview',
-} as const; 
+} 

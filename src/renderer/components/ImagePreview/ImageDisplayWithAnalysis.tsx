@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, ViewportFrame } from '@shared/types';
+import { ImageLoadResult, IPC_CHANNELS, AnalysisResult, ViewportFrame } from '@shared/types';
 import { InteractiveViewportFrameOverlay } from './InteractiveViewportFrameOverlay';
 import { useImageStore } from '../../stores/imageStore';
 import { 
@@ -183,7 +183,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
 
     try {
       const result = await window.electronAPI.invoke(
-        ANALYSIS_IPC_CHANNELS.IMAGE_ANALYZE_CLICK,
+        IPC_CHANNELS.IMAGE_ANALYZE_CLICK,
         imagePath,
         imageCoords.x,
         imageCoords.y

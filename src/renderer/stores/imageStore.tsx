@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { ImageState, IMAGE_IPC_CHANNELS, ImageLoadResult, ViewportPreviewResult, VIEWPORT_IPC_CHANNELS, ViewportFrame } from '@shared/types';
+import { ImageState, IPC_CHANNELS, ImageLoadResult, ViewportPreviewResult, ViewportFrame } from '@shared/types';
 
 const initialState: ImageState = {
   loading: false,
@@ -38,7 +38,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
     try {
       // Call IPC to load image
       const result = await window.electronAPI.invoke(
-        IMAGE_IPC_CHANNELS.IMAGE_LOAD,
+        IPC_CHANNELS.IMAGE_LOAD,
         imagePath
       ) as ImageLoadResult;
 
@@ -80,7 +80,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
   // Generate viewport preview
   const generateViewportPreview = useCallback(async (imagePath: string, viewportFrame: ViewportFrame) => {
     try {
-      console.log('Invoking viewport preview with channel:', VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
+      console.log('Invoking viewport preview with channel:', IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
       
       // Calculate aspect-ratio-preserving preview size
       const { boundingBox } = viewportFrame;
@@ -105,7 +105,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
       console.log(`Preview size for ${viewportFrame.id}: ${previewWidth}x${previewHeight} (aspect ratio: ${aspectRatio.toFixed(2)})`);
       
       const result = await window.electronAPI.invoke(
-        VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW,
+        IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW,
         imagePath,
         viewportFrame,
         { width: previewWidth, height: previewHeight }

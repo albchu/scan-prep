@@ -2,7 +2,7 @@ import { ipcMain } from 'electron';
 import { FileManager } from './services/FileManager';
 import { ImageProcessor } from './services/ImageProcessor';
 import { ImageAnalysisService } from './services/ImageAnalysisService';
-import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, IMAGE_IPC_CHANNELS, ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, AnalysisOptions, VIEWPORT_IPC_CHANNELS, ViewportPreviewResult, ViewportFrame } from '@shared/types';
+import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, ImageLoadResult, AnalysisResult, AnalysisOptions, ViewportPreviewResult, ViewportFrame } from '@shared/types';
 
 export class IPCHandlers {
   private fileManager: FileManager;
@@ -48,7 +48,7 @@ export class IPCHandlers {
       }
     });
 
-    // Phase 3: Handle enhanced file info requests
+    // Handle enhanced file info requests
     ipcMain.handle(IPC_CHANNELS.FILE_GET_FILE_INFO, async (event, filePath: string): Promise<EnhancedFileInfo | null> => {
       try {
         console.log('Getting file info:', filePath);
@@ -61,8 +61,8 @@ export class IPCHandlers {
       }
     });
 
-    // Phase 4: Handle image loading requests
-    ipcMain.handle(IMAGE_IPC_CHANNELS.IMAGE_LOAD, async (event, imagePath: string): Promise<ImageLoadResult> => {
+    // Handle image loading requests
+    ipcMain.handle(IPC_CHANNELS.IMAGE_LOAD, async (event, imagePath: string): Promise<ImageLoadResult> => {
       try {
         console.log('Loading image:', imagePath);
         const result = await this.imageProcessor.loadImage(imagePath);
@@ -77,8 +77,8 @@ export class IPCHandlers {
       }
     });
 
-    // Phase 5: Handle click-based image analysis requests
-    ipcMain.handle(ANALYSIS_IPC_CHANNELS.IMAGE_ANALYZE_CLICK, async (event, imagePath: string, clickX: number, clickY: number, options?: Partial<AnalysisOptions>): Promise<AnalysisResult> => {
+    // Handle click-based image analysis requests
+    ipcMain.handle(IPC_CHANNELS.IMAGE_ANALYZE_CLICK, async (event, imagePath: string, clickX: number, clickY: number, options?: Partial<AnalysisOptions>): Promise<AnalysisResult> => {
       try {
         console.log('Analyzing image with click:', imagePath, 'at coordinates:', { clickX, clickY }, 'with options:', options);
         const result = await this.imageAnalysisService.analyzeImageWithClick(imagePath, clickX, clickY, options);
@@ -98,8 +98,8 @@ export class IPCHandlers {
     });
 
     // Handle viewport preview generation
-    console.log('Registering viewport preview handler for channel:', VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
-    ipcMain.handle(VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW, async (event, imagePath: string, viewportFrame: ViewportFrame, previewSize: { width: number; height: number }): Promise<ViewportPreviewResult> => {
+    console.log('Registering viewport preview handler for channel:', IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
+    ipcMain.handle(IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW, async (event, imagePath: string, viewportFrame: ViewportFrame, previewSize: { width: number; height: number }): Promise<ViewportPreviewResult> => {
       try {
         console.log('Generating viewport preview for:', imagePath, 'viewport frame:', viewportFrame.id, 'size:', previewSize);
         const result = await this.imageAnalysisService.generateViewportPreview(imagePath, viewportFrame, previewSize);
@@ -125,13 +125,9 @@ export class IPCHandlers {
   public removeHandlers(): void {
     ipcMain.removeHandler(IPC_CHANNELS.FILE_READ_DIRECTORY);
     ipcMain.removeHandler(IPC_CHANNELS.FILE_VALIDATE_PATH);
-    // Phase 3: Remove new handlers
     ipcMain.removeHandler(IPC_CHANNELS.FILE_GET_FILE_INFO);
-    // Phase 4: Remove image handler
-    ipcMain.removeHandler(IMAGE_IPC_CHANNELS.IMAGE_LOAD);
-    // Phase 5: Remove analysis handlers
-    ipcMain.removeHandler(ANALYSIS_IPC_CHANNELS.IMAGE_ANALYZE_CLICK);
-    // Remove viewport preview handler
-    ipcMain.removeHandler(VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
+    ipcMain.removeHandler(IPC_CHANNELS.IMAGE_LOAD);
+    ipcMain.removeHandler(IPC_CHANNELS.IMAGE_ANALYZE_CLICK);
+    ipcMain.removeHandler(IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
   }
 } 
