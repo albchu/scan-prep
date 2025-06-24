@@ -8,7 +8,7 @@ interface ViewportPreviewProps {
 export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
   viewportPreview
 }) => {
-  const { base64, width, height, originalDetection, success, error } = viewportPreview;
+  const { base64, width, height, viewportFrame, success, error } = viewportPreview;
   
   if (!success || !base64) {
     return (
@@ -25,7 +25,7 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
     );
   }
 
-  const aspectRatio = originalDetection.boundingBox.width / originalDetection.boundingBox.height;
+  const aspectRatio = viewportFrame.boundingBox.width / viewportFrame.boundingBox.height;
   const isLandscape = aspectRatio > 1;
   const isPortrait = aspectRatio < 1;
   
@@ -34,7 +34,7 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
       <div className="preview-container">
         <img 
           src={base64} 
-          alt={`Viewport preview ${originalDetection.id}`}
+          alt={`Viewport preview ${viewportFrame.id}`}
           className="preview-image"
           style={{
             maxWidth: '100%',
@@ -54,17 +54,17 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
         
         <div className="flex items-center justify-between text-xs">
           <span className="text-dark-400">
-            {Math.round(originalDetection.boundingBox.width)}×{Math.round(originalDetection.boundingBox.height)} region
+            {Math.round(viewportFrame.boundingBox.width)}×{Math.round(viewportFrame.boundingBox.height)} region
           </span>
           <span className="text-dark-500">
             {isLandscape ? '🔄' : isPortrait ? '📱' : '⬜'} {aspectRatio.toFixed(2)}
           </span>
         </div>
         
-        {Math.abs(originalDetection.rotation) > 1 && (
+        {Math.abs(viewportFrame.rotation) > 1 && (
           <div className="mt-1">
             <span className="rotation-indicator text-orange-400">
-              ↻ {Math.round(originalDetection.rotation)}°
+              ↻ {Math.round(viewportFrame.rotation)}°
             </span>
           </div>
         )}

@@ -110,7 +110,7 @@ export class IPCHandlers {
         return {
           success: false,
           id: viewportFrame.id,
-          originalDetection: viewportFrame,
+          viewportFrame,
           error: error instanceof Error ? error.message : 'Unknown error',
         };
       }

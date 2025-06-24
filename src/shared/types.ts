@@ -36,7 +36,6 @@ export interface EnhancedFileInfo extends DirectoryEntry {
   };
 }
 
-// IPC channel definitions for type safety
 export const IPC_CHANNELS = {
   FILE_GET_FILE_INFO: 'file:get-file-info',
   FILE_READ_DIRECTORY: 'file:read-directory',
@@ -47,35 +46,21 @@ export const IPC_CHANNELS = {
 } as const;
 
 export const ERROR_CODES = {
-  // File system errors
   INVALID_PATH: 'INVALID_PATH',
   FILE_NOT_FOUND: 'FILE_NOT_FOUND',
   ACCESS_DENIED: 'ACCESS_DENIED',
   UNSUPPORTED_FORMAT: 'UNSUPPORTED_FORMAT',
   DIRECTORY_NOT_FOUND: 'DIRECTORY_NOT_FOUND',
   PERMISSION_DENIED: 'PERMISSION_DENIED',
-  
-  // General errors
   UNKNOWN_ERROR: 'UNKNOWN_ERROR'
 } as const;
 
-// Application constants
 export const APP_CONSTANTS = {
   MIN_WINDOW_WIDTH: 1200,
   MIN_WINDOW_HEIGHT: 800,
   DEFAULT_WINDOW_WIDTH: 1400,
   DEFAULT_WINDOW_HEIGHT: 900,
-  
-  // Supported file formats
   SUPPORTED_IMAGE_FORMATS: ['.jpg', '.jpeg', '.png', '.tiff', '.tif'] as const,
-  
-  // UI Constants
-  PREVIEW_MAX_WIDTH: 800,
-  PREVIEW_MAX_HEIGHT: 600,
-  
-  VIEW_MODES: {
-    LIST: 'list' as const,
-  },
 } as const;
 
 export type SupportedImageFormat = typeof APP_CONSTANTS.SUPPORTED_IMAGE_FORMATS[number];
@@ -110,7 +95,7 @@ export interface BoundingBox {
 
 export interface ViewportFrame {
   id: string;
-  boundingBox: BoundingBox; // Initial axis-aligned bounding box from detection
+  boundingBox: BoundingBox; // Axis-aligned bounding box from detection
   rotation: number; // User-applied rotation in degrees (0 by default)
   area: number; // pixel area
 }
@@ -128,14 +113,12 @@ export interface AnalysisOptions {
   backgroundColor: 'white' | 'black' | 'auto'; // Scanner background
   minAreaThreshold: number; // Minimum area in pixels to consider
   minDimensionThreshold: number; // Minimum width or height in pixels
-  edgeSensitivity: number; // 0-1, higher = more sensitive
 }
 
 export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptions = {
   backgroundColor: 'white',
   minAreaThreshold: 2500, // ~50x50 pixels minimum
   minDimensionThreshold: 30, // At least 30 pixels in smallest dimension
-  edgeSensitivity: 0.5,
 };
 
 export interface ViewportPreviewResult {
@@ -144,6 +127,6 @@ export interface ViewportPreviewResult {
   base64?: string;
   width?: number;
   height?: number;
-  originalDetection: ViewportFrame;
+  viewportFrame: ViewportFrame;
   error?: string;
 } 

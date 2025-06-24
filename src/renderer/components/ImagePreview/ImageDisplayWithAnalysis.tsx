@@ -34,8 +34,9 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
   const lastPreviewRotations = useRef<Map<string, number>>(new Map());
   const debounceManager = useRef(new DebounceManager());
 
-  const { generateViewportPreview, clearViewportPreviews } = useImageStore();
+  const { generateViewportPreview, clearViewportPreviews, viewportPreviews } = useImageStore();
 
+  console.log('viewportPreviews', viewportPreviews);
   // Function to update display dimensions and scale
   const updateDisplayDimensions = useCallback(() => {
     if (imageRef.current && imageData) {

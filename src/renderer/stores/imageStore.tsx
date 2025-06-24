@@ -125,7 +125,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
       const errorResult: ViewportPreviewResult = {
         success: false,
         id: viewportFrame.id,
-        originalDetection: viewportFrame,
+        viewportFrame,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
       setState(prev => ({

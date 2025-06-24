@@ -153,14 +153,14 @@ export class ImageAnalysisService {
         base64,
         width: previewSize.width,
         height: previewSize.height,
-        originalDetection: viewportFrame,
+        viewportFrame,
       };
     } catch (error) {
       console.error('Error generating viewport preview:', error);
       return {
         success: false,
         id: viewportFrame.id,
-        originalDetection: viewportFrame,
+        viewportFrame,
         error: error instanceof Error ? error.message : 'Unknown error during viewport preview generation',
       };
     }
