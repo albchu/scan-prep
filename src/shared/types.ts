@@ -102,7 +102,7 @@ export interface ViewportFrame {
 
 export interface AnalysisResult {
   success: boolean;
-  detectedImages: ViewportFrame[];
+  viewportFrames: ViewportFrame[];
   analysisTime: number; // milliseconds
   error?: string;
   imageWidth: number;

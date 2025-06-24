@@ -28,7 +28,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
   const [displayDimensions, setDisplayDimensions] = useState({ width: 0, height: 0 });
   const [displayScale, setDisplayScale] = useState<number | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [clickDetections, setClickDetections] = useState<AnalysisResult[]>([]);
+  const [analysisResults, setAnalysisResults] = useState<AnalysisResult[]>([]);
 
   // Track last viewport preview rotations to avoid unnecessary regeneration
   const lastPreviewRotations = useRef<Map<string, number>>(new Map());
@@ -110,7 +110,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
 
   // Generate viewport previews when detections change (initial creation only)
   useEffect(() => {
-    const allViewportFrames = clickDetections.flatMap(d => d.detectedImages);
+    const allViewportFrames = analysisResults.flatMap(d => d.viewportFrames);
     allViewportFrames.forEach(viewportFrame => {
       // Only generate preview if we haven't seen this frame before
       if (!lastPreviewRotations.current.has(viewportFrame.id) && imagePath) {
@@ -119,15 +119,15 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
         generateViewportPreview(imagePath, viewportFrame);
       }
     });
-  }, [clickDetections, imagePath, generateViewportPreview]);
+  }, [analysisResults, imagePath, generateViewportPreview]);
 
   // Clean up tracking when detections are cleared
   useEffect(() => {
-    if (clickDetections.length === 0) {
+    if (analysisResults.length === 0) {
       lastPreviewRotations.current.clear();
       debounceManager.current.clearAll();
     }
-  }, [clickDetections.length]);
+  }, [analysisResults.length]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -142,9 +142,9 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
    */
   const handleRotationChange = useCallback((frameId: string, newRotation: number) => {
     // Update the viewportFrame state immediately for smooth UI
-    setClickDetections(prev => prev.map(result => ({
+    setAnalysisResults(prev => prev.map(result => ({
       ...result,
-      detectedImages: result.detectedImages.map(viewportFrame => 
+      viewportFrames: result.viewportFrames.map(viewportFrame => 
         viewportFrame.id === frameId 
           ? { ...viewportFrame, rotation: newRotation }
           : viewportFrame
@@ -152,15 +152,15 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
     })));
 
     // Find the updated viewportFrame and debounce the viewport preview update
-    const updatedViewportFrame = clickDetections
-      .flatMap(d => d.detectedImages)
+    const updatedViewportFrame = analysisResults
+      .flatMap(d => d.viewportFrames)
       .find(d => d.id === frameId);
       
     if (updatedViewportFrame) {
       const frameWithNewRotation = { ...updatedViewportFrame, rotation: newRotation };
       debouncedUpdateViewportPreview(frameId, frameWithNewRotation);
     }
-  }, [clickDetections, debouncedUpdateViewportPreview]);
+  }, [analysisResults, debouncedUpdateViewportPreview]);
 
   const handleImageClick = useCallback(async (event: React.MouseEvent<Element, MouseEvent>) => {
     if (!imageRef.current || !imageData || isAnalyzing) return;
@@ -191,8 +191,8 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
       ) as AnalysisResult;
 
       if (result.success) {
-        setClickDetections(prev => [...prev, result]);
-        console.log(`Click detection found ${result.detectedImages.length} viewport frames in ${result.analysisTime}ms`);
+        setAnalysisResults(prev => [...prev, result]);
+        console.log(`Click detection found ${result.viewportFrames.length} viewport frames in ${result.analysisTime}ms`);
       } else {
         console.error('Click analysis failed:', result.error);
         // TODO: Show error message to user
@@ -206,7 +206,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
   }, [imagePath, imageData, isAnalyzing]);
 
   const handleClearDetections = useCallback(() => {
-    setClickDetections([]);
+    setAnalysisResults([]);
     clearViewportPreviews();
   }, [clearViewportPreviews]);
 
@@ -232,9 +232,9 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
           />
           
           {/* Interactive viewport frame overlay with rotation handles */}
-          {clickDetections.some(d => d.detectedImages.length > 0) && displayDimensions.width > 0 && displayDimensions.height > 0 && (
+          {analysisResults.some(d => d.viewportFrames.length > 0) && displayDimensions.width > 0 && displayDimensions.height > 0 && (
             <InteractiveViewportFrameOverlay
-              viewportFrames={clickDetections.flatMap(d => d.detectedImages)}
+              viewportFrames={analysisResults.flatMap(d => d.viewportFrames)}
               imageWidth={imageData.width}
               imageHeight={imageData.height}
               displayWidth={displayDimensions.width}
@@ -263,12 +263,12 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
           </div>
           
           {/* Analysis results info */}
-          {clickDetections.length > 0 && (
+          {analysisResults.length > 0 && (
             <div className="mt-2 text-sm">
               <span className="text-blue-500">
-                {clickDetections.reduce((sum, d) => sum + d.detectedImages.length, 0)} viewport frame{clickDetections.reduce((sum, d) => sum + d.detectedImages.length, 0) !== 1 ? 's' : ''} from {clickDetections.length} click{clickDetections.length !== 1 ? 's' : ''}
+                {analysisResults.reduce((sum, d) => sum + d.viewportFrames.length, 0)} viewport frame{analysisResults.reduce((sum, d) => sum + d.viewportFrames.length, 0) !== 1 ? 's' : ''} from {analysisResults.length} click{analysisResults.length !== 1 ? 's' : ''}
               </span>
-              {clickDetections.some(d => d.detectedImages.some(img => Math.abs(img.rotation) > 1)) && (
+              {analysisResults.some(d => d.viewportFrames.some(img => Math.abs(img.rotation) > 1)) && (
                 <span className="text-orange-500 ml-2">
                   (rotated)
                 </span>
@@ -283,13 +283,13 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
             Click on the image to detect viewport frames • Drag rotation handles to adjust angles
           </div>
           
-          {clickDetections.length > 0 && (
+          {analysisResults.length > 0 && (
             <button
               onClick={handleClearDetections}
               className="w-full px-3 py-2 text-sm bg-dark-700 hover:bg-dark-600 text-dark-200 rounded-lg transition-colors"
               disabled={isAnalyzing}
             >
-              Clear Viewport Frames ({clickDetections.length})
+              Clear Viewport Frames ({analysisResults.length})
             </button>
           )}
         </div>

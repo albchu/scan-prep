@@ -82,13 +82,13 @@ export class IPCHandlers {
       try {
         console.log('Analyzing image with click:', imagePath, 'at coordinates:', { clickX, clickY }, 'with options:', options);
         const result = await this.imageAnalysisService.analyzeImageWithClick(imagePath, clickX, clickY, options);
-        console.log(`Click analysis result: ${result.success ? 'success' : 'failed'}, found ${result.detectedImages.length} sub-images`);
+        console.log(`Click analysis result: ${result.success ? 'success' : 'failed'}, found ${result.viewportFrames.length} sub-images`);
         return result;
       } catch (error) {
         console.error('Error analyzing image with click:', error);
         return {
           success: false,
-          detectedImages: [],
+          viewportFrames: [],
           analysisTime: 0,
           error: error instanceof Error ? error.message : 'Unknown error',
           imageWidth: 0,
