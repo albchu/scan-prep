@@ -11,7 +11,7 @@ import {
   ViewportFrameResult,
 } from "@shared/types";
 import { IPC_CHANNELS } from "@shared/constants";
-import debounce from "debounce";
+import { useDebouncedCallback } from 'use-debounce';
 
 const initialState: ImageState = {
   loading: false,
@@ -95,7 +95,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
     setState(initialState);
   }, []);
 
-  const updateViewportPreview = useCallback(
+  const updateViewportPreview = useDebouncedCallback(
     async (frameId: string, imagePath: string) => {
       const viewportFrame = state.viewportPreviews.find(
         (p) => p.viewportFrame?.id === frameId
@@ -121,7 +121,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
           : [...prev.viewportPreviews, result],
       }));
     },
-    [state.viewportPreviews]
+   200
   );
 
   const addViewportPreview = useCallback(
