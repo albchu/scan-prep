@@ -1,10 +1,10 @@
 import React from 'react';
-import { ViewportPreviewResult } from '@shared/types';
+import { ViewportFrameResult } from '@shared/types';
 import { ViewportPreview } from './ViewportPreview';
 import { SubImageGridPlaceholder } from './SubImageGridPlaceholder';
 
 interface SubImageGridProps {
-  viewportPreviews: ViewportPreviewResult[];
+  viewportPreviews: ViewportFrameResult[];
 }
 
 export const SubImageGrid: React.FC<SubImageGridProps> = ({

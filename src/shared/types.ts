@@ -83,7 +83,7 @@ export interface ImageState {
   error: string | null;
   imageData: ImageLoadResult['data'] | null;
   selectedPath: string | null;
-  viewportPreviews: ViewportPreviewResult[];
+  viewportPreviews: ViewportFrameResult[];
 }
 
 export interface BoundingBox {
@@ -121,7 +121,7 @@ export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptions = {
   minDimensionThreshold: 30, // At least 30 pixels in smallest dimension
 };
 
-export interface ViewportPreviewResult {
+export interface ViewportFrameResult {
   success: boolean;
   id: string;
   base64?: string;

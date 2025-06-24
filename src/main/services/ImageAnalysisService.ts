@@ -4,7 +4,7 @@ import {
   AnalysisOptions,
   DEFAULT_ANALYSIS_OPTIONS,
   ViewportFrame,
-  ViewportPreviewResult,
+  ViewportFrameResult,
 } from '@shared/types';
 import {
   detectBoundaryPoints,
@@ -135,7 +135,7 @@ export class ImageAnalysisService {
     imagePath: string, 
     viewportFrame: ViewportFrame,
     previewSize: { width: number; height: number }
-  ): Promise<ViewportPreviewResult> {
+  ): Promise<ViewportFrameResult> {
     try {
       // Load the source image
       const sourceImage = await Image.load(imagePath);

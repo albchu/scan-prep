@@ -1,8 +1,8 @@
 import React from 'react';
-import { ViewportPreviewResult } from '@shared/types';
+import { ViewportFrameResult } from '@shared/types';
 
 interface ViewportPreviewProps {
-  viewportPreview: ViewportPreviewResult;
+  viewportPreview: ViewportFrameResult;
 }
 
 export const ViewportPreview: React.FC<ViewportPreviewProps> = ({

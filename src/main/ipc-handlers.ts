@@ -2,7 +2,7 @@ import { ipcMain } from 'electron';
 import { FileManager } from './services/FileManager';
 import { ImageProcessor } from './services/ImageProcessor';
 import { ImageAnalysisService } from './services/ImageAnalysisService';
-import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, ImageLoadResult, AnalysisResult, AnalysisOptions, ViewportPreviewResult, ViewportFrame } from '@shared/types';
+import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, ImageLoadResult, AnalysisResult, AnalysisOptions, ViewportFrameResult, ViewportFrame } from '@shared/types';
 
 export class IPCHandlers {
   private fileManager: FileManager;
@@ -99,7 +99,7 @@ export class IPCHandlers {
 
     // Handle viewport preview generation
     console.log('Registering viewport preview handler for channel:', IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
-    ipcMain.handle(IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW, async (event, imagePath: string, viewportFrame: ViewportFrame, previewSize: { width: number; height: number }): Promise<ViewportPreviewResult> => {
+    ipcMain.handle(IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW, async (event, imagePath: string, viewportFrame: ViewportFrame, previewSize: { width: number; height: number }): Promise<ViewportFrameResult> => {
       try {
         console.log('Generating viewport preview for:', imagePath, 'viewport frame:', viewportFrame.id, 'size:', previewSize);
         const result = await this.imageAnalysisService.generateViewportPreview(imagePath, viewportFrame, previewSize);

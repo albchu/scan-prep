@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { ImageState, IPC_CHANNELS, ImageLoadResult, ViewportPreviewResult, ViewportFrame } from '@shared/types';
+import { ImageState, IPC_CHANNELS, ImageLoadResult, ViewportFrameResult, ViewportFrame } from '@shared/types';
 
 const initialState: ImageState = {
   loading: false,
@@ -109,7 +109,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
         imagePath,
         viewportFrame,
         { width: previewWidth, height: previewHeight }
-      ) as ViewportPreviewResult;
+      ) as ViewportFrameResult;
       
       if (result.success || !result.success) { // Include both success and error results
         setState(prev => ({
@@ -122,7 +122,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
     } catch (error) {
       console.error('Failed to generate viewport preview:', error);
       // Add error result to previews
-      const errorResult: ViewportPreviewResult = {
+      const errorResult: ViewportFrameResult = {
         success: false,
         id: viewportFrame.id,
         viewportFrame,
