@@ -3,7 +3,7 @@ import {
   AnalysisResult,
   AnalysisOptions,
   DEFAULT_ANALYSIS_OPTIONS,
-  DetectedSubImage,
+  ViewportFrame,
   ViewportPreviewResult,
   BoundingBox,
 } from '@shared/types';
@@ -12,7 +12,7 @@ import {
   validateClickCoordinates,
   getBackgroundColor,
   calculateBoundingBox,
-  createDetectedSubImage,
+  createViewportFrame,
   isDebugMode,
   saveDebugImage,
 } from '../utils';
@@ -45,7 +45,7 @@ export class ImageAnalysisService {
       validateClickCoordinates(clickX, clickY, image.width, image.height);
       
       // Detect sub-image boundary using 8-directional traversal
-      const detectedImage = await this.detectSubImageFromClick(
+      const viewportFrame = await this.detectSubImageFromClick(
         image, 
         clickX, 
         clickY, 
@@ -56,7 +56,7 @@ export class ImageAnalysisService {
       
       return {
         success: true,
-        detectedImages: detectedImage ? [detectedImage] : [],
+        detectedImages: viewportFrame ? [viewportFrame] : [],
         analysisTime,
         imageWidth: image.width,
         imageHeight: image.height,
@@ -83,7 +83,7 @@ export class ImageAnalysisService {
     clickX: number,
     clickY: number,
     options: AnalysisOptions
-  ): Promise<DetectedSubImage | null> {
+  ): Promise<ViewportFrame | null> {
     console.log('Starting 8-directional boundary detection from click point:', { clickX, clickY });
     
     // Convert to grayscale for analysis
@@ -104,41 +104,41 @@ export class ImageAnalysisService {
     // Calculate axis-aligned bounding box from boundary points
     const boundingBox = calculateBoundingBox(boundaryPoints, clickX, clickY);
     
-    // Create detected sub-image (axis-aligned only)
-    const detectedImage = createDetectedSubImage(boundingBox, options);
+    // Create viewport frame (axis-aligned only)
+    const viewportFrame = createViewportFrame(boundingBox, options);
 
-    if (!detectedImage) {
+    if (!viewportFrame) {
       return null;
     }
 
-    console.log('Detected sub-image from click:', {
-      boundingBox: detectedImage.boundingBox,
-      area: detectedImage.area,
+    console.log('Detected viewport frame from click:', {
+      boundingBox: viewportFrame.boundingBox,
+      area: viewportFrame.area,
       clickPoint: { x: clickX, y: clickY }
     });
 
     // Save debug image if enabled
     if (isDebugMode()) {
-      await saveDebugImage(gray, detectedImage, clickX, clickY);
+      await saveDebugImage(gray, viewportFrame, clickX, clickY);
     }
 
-    return detectedImage;
+    return viewportFrame;
   }
 
   /**
    * Generate viewport preview for a detected region
    * @param imagePath - Source image path
-   * @param detection - Detection with rotation information
+   * @param viewportFrame - ViewportFrame with rotation information
    * @param previewSize - Target size for the preview (e.g., 200x200)
    * @returns Base64 encoded viewport preview
    */
   async generateViewportPreview(
     imagePath: string, 
-    detection: DetectedSubImage,
+    viewportFrame: ViewportFrame,
     previewSize: { width: number; height: number }
   ): Promise<ViewportPreviewResult> {
     try {
-      console.log('Generating viewport preview for detection:', detection.id, 'with rotation:', detection.userRotation);
+      console.log('Generating viewport preview for frame:', viewportFrame.id, 'with rotation:', viewportFrame.userRotation);
       
       // Load the source image
       const sourceImage = await Image.load(imagePath);
@@ -146,24 +146,24 @@ export class ImageAnalysisService {
       // Generate viewport preview with content straightened (counter-rotated)
       const base64 = await this.generateViewportPreviewInternal(
         sourceImage,
-        detection,
+        viewportFrame,
         previewSize
       );
       
       return {
         success: true,
-        id: detection.id,
+        id: viewportFrame.id,
         base64,
         width: previewSize.width,
         height: previewSize.height,
-        originalDetection: detection,
+        originalDetection: viewportFrame,
       };
     } catch (error) {
       console.error('Error generating viewport preview:', error);
       return {
         success: false,
-        id: detection.id,
-        originalDetection: detection,
+        id: viewportFrame.id,
+        originalDetection: viewportFrame,
         error: error instanceof Error ? error.message : 'Unknown error during viewport preview generation',
       };
     }
@@ -174,16 +174,16 @@ export class ImageAnalysisService {
    */
   private async generateViewportPreviewInternal(
     sourceImage: Image,
-    detection: DetectedSubImage,
+    viewportFrame: ViewportFrame,
     previewSize: { width: number; height: number }
   ): Promise<string> {
     // If no rotation, use simple crop and scale
-    if (Math.abs(detection.userRotation) < 1) {
+    if (Math.abs(viewportFrame.userRotation) < 1) {
       const croppedImage = sourceImage.crop({
-        x: Math.round(detection.boundingBox.x),
-        y: Math.round(detection.boundingBox.y),
-        width: Math.round(detection.boundingBox.width),
-        height: Math.round(detection.boundingBox.height)
+        x: Math.round(viewportFrame.boundingBox.x),
+        y: Math.round(viewportFrame.boundingBox.y),
+        width: Math.round(viewportFrame.boundingBox.width),
+        height: Math.round(viewportFrame.boundingBox.height)
       });
       
       const scaledImage = croppedImage.resize({
@@ -195,12 +195,12 @@ export class ImageAnalysisService {
     }
     
     // Calculate the center of the bounding box in the original image
-    const centerX = detection.boundingBox.x + detection.boundingBox.width / 2;
-    const centerY = detection.boundingBox.y + detection.boundingBox.height / 2;
+    const centerX = viewportFrame.boundingBox.x + viewportFrame.boundingBox.width / 2;
+    const centerY = viewportFrame.boundingBox.y + viewportFrame.boundingBox.height / 2;
     
     // Rotate the entire image (negative angle to straighten content)
     // Note: the image-js library rotates around the center of the image
-    const rotatedImage = sourceImage.rotate(-detection.userRotation);
+    const rotatedImage = sourceImage.rotate(-viewportFrame.userRotation);
     
     // Calculate the transformation from original to rotated coordinates
     // The rotation center in the original image is sourceImage.width/2, sourceImage.height/2
@@ -211,7 +211,7 @@ export class ImageAnalysisService {
     const vectorY = centerY - sourceImage.height / 2;
     
     // Calculate the angle in radians for the rotation
-    const angleRad = (-detection.userRotation * Math.PI) / 180;
+    const angleRad = (-viewportFrame.userRotation * Math.PI) / 180;
     const cosAngle = Math.cos(angleRad);
     const sinAngle = Math.sin(angleRad);
     
@@ -224,15 +224,15 @@ export class ImageAnalysisService {
     const rotatedCenterY = rotatedImage.height / 2 + rotatedVectorY;
     
     // Calculate crop coordinates (centered on the rotated box center)
-    const cropX = Math.round(rotatedCenterX - detection.boundingBox.width / 2);
-    const cropY = Math.round(rotatedCenterY - detection.boundingBox.height / 2);
+    const cropX = Math.round(rotatedCenterX - viewportFrame.boundingBox.width / 2);
+    const cropY = Math.round(rotatedCenterY - viewportFrame.boundingBox.height / 2);
     
     // Crop to the exact bounding box dimensions
     const croppedImage = rotatedImage.crop({
       x: Math.max(0, cropX),
       y: Math.max(0, cropY),
-      width: Math.min(rotatedImage.width - cropX, detection.boundingBox.width),
-      height: Math.min(rotatedImage.height - cropY, detection.boundingBox.height)
+      width: Math.min(rotatedImage.width - cropX, viewportFrame.boundingBox.width),
+      height: Math.min(rotatedImage.height - cropY, viewportFrame.boundingBox.height)
     });
     
     // Scale to final preview size

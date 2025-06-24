@@ -16,7 +16,7 @@ export {
   validateClickCoordinates,
   getBackgroundColor,
   calculateBoundingBox,
-  createDetectedSubImage,
+  createViewportFrame,
 } from './imageValidation';
 
 // Debug utilities

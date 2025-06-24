@@ -2,7 +2,7 @@ import { ipcMain } from 'electron';
 import { FileManager } from './services/FileManager';
 import { ImageProcessor } from './services/ImageProcessor';
 import { ImageAnalysisService } from './services/ImageAnalysisService';
-import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, IMAGE_IPC_CHANNELS, ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, AnalysisOptions, VIEWPORT_IPC_CHANNELS, ViewportPreviewResult, DetectedSubImage } from '@shared/types';
+import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, IMAGE_IPC_CHANNELS, ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, AnalysisOptions, VIEWPORT_IPC_CHANNELS, ViewportPreviewResult, ViewportFrame } from '@shared/types';
 
 export class IPCHandlers {
   private fileManager: FileManager;
@@ -99,18 +99,18 @@ export class IPCHandlers {
 
     // Handle viewport preview generation
     console.log('Registering viewport preview handler for channel:', VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
-    ipcMain.handle(VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW, async (event, imagePath: string, detection: DetectedSubImage, previewSize: { width: number; height: number }): Promise<ViewportPreviewResult> => {
+    ipcMain.handle(VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW, async (event, imagePath: string, viewportFrame: ViewportFrame, previewSize: { width: number; height: number }): Promise<ViewportPreviewResult> => {
       try {
-        console.log('Generating viewport preview for:', imagePath, 'detection:', detection.id, 'size:', previewSize);
-        const result = await this.imageAnalysisService.generateViewportPreview(imagePath, detection, previewSize);
+        console.log('Generating viewport preview for:', imagePath, 'viewport frame:', viewportFrame.id, 'size:', previewSize);
+        const result = await this.imageAnalysisService.generateViewportPreview(imagePath, viewportFrame, previewSize);
         console.log(`Viewport preview result: ${result.success ? 'success' : 'failed'}`);
         return result;
       } catch (error) {
         console.error('Error generating viewport preview:', error);
         return {
           success: false,
-          id: detection.id,
-          originalDetection: detection,
+          id: viewportFrame.id,
+          originalDetection: viewportFrame,
           error: error instanceof Error ? error.message : 'Unknown error',
         };
       }

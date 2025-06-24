@@ -1,9 +1,9 @@
 import React from 'react';
-import { DetectedSubImage } from '@shared/types';
+import { ViewportFrame } from '@shared/types';
 import { Point, createPolygonPath } from '../../utils';
 
-interface DetectionShapeProps {
-  detection: DetectedSubImage;
+interface ViewportFrameShapeProps {
+  viewportFrame: ViewportFrame;
   corners: Point[];
   center: Point;
   isSelected?: boolean;
@@ -12,8 +12,8 @@ interface DetectionShapeProps {
   opacity?: number;
 }
 
-export const DetectionShape: React.FC<DetectionShapeProps> = ({
-  detection,
+export const ViewportFrameShape: React.FC<ViewportFrameShapeProps> = ({
+  viewportFrame,
   corners,
   center,
   isSelected = false,
@@ -25,7 +25,7 @@ export const DetectionShape: React.FC<DetectionShapeProps> = ({
   
   return (
     <g>
-      {/* Detection rectangle */}
+      {/* Viewport frame rectangle */}
       <path
         d={pathData}
         fill="none"
@@ -45,7 +45,7 @@ export const DetectionShape: React.FC<DetectionShapeProps> = ({
       />
       
       {/* Rotation angle label */}
-      {Math.abs(detection.userRotation) > 1 && (
+      {Math.abs(viewportFrame.userRotation) > 1 && (
         <text
           x={center.x}
           y={center.y - 15}
@@ -55,7 +55,7 @@ export const DetectionShape: React.FC<DetectionShapeProps> = ({
           fontWeight="bold"
           opacity={opacity}
         >
-          {Math.round(detection.userRotation)}°
+          {Math.round(viewportFrame.userRotation)}°
         </text>
       )}
     </g>

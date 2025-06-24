@@ -1,5 +1,5 @@
 import { Image } from 'image-js';
-import { DetectedSubImage } from '@shared/types';
+import { ViewportFrame } from '@shared/types';
 
 /**
  * Check if debug mode is enabled
@@ -13,7 +13,7 @@ export function isDebugMode(): boolean {
  */
 export async function saveDebugImage(
   grayImage: Image,
-  detection: DetectedSubImage,
+  viewportFrame: ViewportFrame,
   clickX: number,
   clickY: number
 ): Promise<void> {
@@ -24,7 +24,7 @@ export async function saveDebugImage(
     // Draw bounding box (we'll simulate this by creating a simple overlay)
     // Note: image-js doesn't have direct drawing capabilities, so we'll just save the info
     console.log('Debug image info:', {
-      detectedBoundingBox: detection.boundingBox,
+      detectedBoundingBox: viewportFrame.boundingBox,
       clickPoint: { x: clickX, y: clickY },
       savedTo: './debug/click_detection.png'
     });

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { DetectedSubImage } from '@shared/types';
+import { ViewportFrame } from '@shared/types';
 import { 
   calculateAngleBetweenPoints, 
   normalizeAngle, 
@@ -9,20 +9,20 @@ import {
 } from '../utils';
 
 interface DragState {
-  detectionId: string;
+  frameId: string;
   startAngle: number;
   startRotation: number;
   containerElement: HTMLElement;
 }
 
 interface UseRotationDragProps {
-  detectedImages: DetectedSubImage[];
+  viewportFrames: ViewportFrame[];
   scaleFactors: ScaleFactors;
-  onRotationChange: (detectionId: string, newRotation: number) => void;
+  onRotationChange: (frameId: string, newRotation: number) => void;
 }
 
 export function useRotationDrag({
-  detectedImages,
+  viewportFrames,
   scaleFactors,
   onRotationChange,
 }: UseRotationDragProps) {
@@ -43,21 +43,21 @@ export function useRotationDrag({
       const currentDragState = dragStateRef.current;
       if (!currentDragState) return;
       
-      const detection = detectedImages.find(d => d.id === currentDragState.detectionId);
-      if (!detection) return;
+      const viewportFrame = viewportFrames.find(f => f.id === currentDragState.frameId);
+      if (!viewportFrame) return;
       
       const mousePos = getMousePositionRelativeToElement(
         event, 
         currentDragState.containerElement
       );
-      const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
+      const center = getBoundingBoxCenter(viewportFrame.boundingBox, scaleFactors);
       const currentAngle = calculateAngleBetweenPoints(center.x, center.y, mousePos.x, mousePos.y);
       
       // Calculate rotation delta and apply to original rotation
       const angleDelta = currentAngle - currentDragState.startAngle;
       const newRotation = normalizeAngle(currentDragState.startRotation + angleDelta);
       
-      onRotationChange(detection.id, newRotation);
+      onRotationChange(viewportFrame.id, newRotation);
     }
     
     function handleGlobalMouseUp() {
@@ -75,14 +75,14 @@ export function useRotationDrag({
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [detectedImages, scaleFactors, onRotationChange]); // Note we don't need dragState here as we use the ref
+  }, [viewportFrames, scaleFactors, onRotationChange]); // Note we don't need dragState here as we use the ref
 
   /**
    * Handle rotation drag start
    */
   const handleRotationStart = useCallback((
     event: React.MouseEvent,
-    detection: DetectedSubImage,
+    viewportFrame: ViewportFrame,
     containerElement: HTMLElement | null
   ) => {
     event.preventDefault();
@@ -91,16 +91,16 @@ export function useRotationDrag({
     
     // Get mouse position and center of bounding box
     const mousePos = getMousePositionRelativeToElement(event, containerElement);
-    const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
+    const center = getBoundingBoxCenter(viewportFrame.boundingBox, scaleFactors);
     
     // Calculate the start angle between mouse and center
     const startAngle = calculateAngleBetweenPoints(center.x, center.y, mousePos.x, mousePos.y);
     
     // Store the initial state for dragging
     setDragState({
-      detectionId: detection.id,
+      frameId: viewportFrame.id,
       startAngle,
-      startRotation: detection.userRotation,
+      startRotation: viewportFrame.userRotation,
       containerElement,
     });
   }, [scaleFactors]);

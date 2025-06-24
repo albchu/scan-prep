@@ -1,4 +1,4 @@
-import { DetectedSubImage } from '@shared/types';
+import { ViewportFrame } from '@shared/types';
 
 export interface Point {
   x: number;
@@ -34,7 +34,7 @@ export function calculateScaleFactors(
  * Calculate the center point of a bounding box in display coordinates
  */
 export function getBoundingBoxCenter(
-  boundingBox: DetectedSubImage['boundingBox'],
+  boundingBox: ViewportFrame['boundingBox'],
   scaleFactors: ScaleFactors
 ): Point {
   return {
@@ -69,7 +69,7 @@ export function normalizeAngle(angle: number): number {
  * Calculate rotated rectangle corners
  */
 export function getRotatedRectangleCorners(
-  boundingBox: DetectedSubImage['boundingBox'],
+  boundingBox: ViewportFrame['boundingBox'],
   rotation: number,
   scaleFactors: ScaleFactors
 ): Point[] {

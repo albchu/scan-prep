@@ -1,4 +1,4 @@
-import { AnalysisOptions, DetectedSubImage } from '@shared/types';
+import { AnalysisOptions, ViewportFrame } from '@shared/types';
 import { v4 as uuidv4 } from 'uuid';
 import { Point } from './boundaryDetection';
 
@@ -74,12 +74,12 @@ export function calculateBoundingBox(
 }
 
 /**
- * Create a DetectedSubImage from boundary detection results
+ * Create a ViewportFrame from boundary detection results
  */
-export function createDetectedSubImage(
+export function createViewportFrame(
   boundingBox: { x: number; y: number; width: number; height: number },
   options: AnalysisOptions
-): DetectedSubImage | null {
+): ViewportFrame | null {
   // Ensure minimum dimensions
   const width = Math.max(boundingBox.width, options.minDimensionThreshold);
   const height = Math.max(boundingBox.height, options.minDimensionThreshold);

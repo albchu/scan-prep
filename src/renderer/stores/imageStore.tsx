@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { ImageState, IMAGE_IPC_CHANNELS, ImageLoadResult, ViewportPreviewResult, VIEWPORT_IPC_CHANNELS, DetectedSubImage } from '@shared/types';
+import { ImageState, IMAGE_IPC_CHANNELS, ImageLoadResult, ViewportPreviewResult, VIEWPORT_IPC_CHANNELS, ViewportFrame } from '@shared/types';
 
 const initialState: ImageState = {
   loading: false,
@@ -13,9 +13,9 @@ const initialState: ImageState = {
 interface ImageStoreContextType extends ImageState {
   loadImage: (imagePath: string) => Promise<void>;
   clearImage: () => void;
-  generateViewportPreview: (imagePath: string, detection: DetectedSubImage) => Promise<void>;
+  generateViewportPreview: (imagePath: string, viewportFrame: ViewportFrame) => Promise<void>;
   clearViewportPreviews: () => void;
-  removeViewportPreview: (detectionId: string) => void;
+  removeViewportPreview: (frameId: string) => void;
 }
 
 const ImageStoreContext = createContext<ImageStoreContextType | undefined>(undefined);
@@ -78,12 +78,12 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
   }, []);
 
   // Generate viewport preview
-  const generateViewportPreview = useCallback(async (imagePath: string, detection: DetectedSubImage) => {
+  const generateViewportPreview = useCallback(async (imagePath: string, viewportFrame: ViewportFrame) => {
     try {
       console.log('Invoking viewport preview with channel:', VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
       
       // Calculate aspect-ratio-preserving preview size
-      const { boundingBox } = detection;
+      const { boundingBox } = viewportFrame;
       const aspectRatio = boundingBox.width / boundingBox.height;
       
       // Target maximum dimension (for grid layout)
@@ -102,20 +102,20 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
         previewWidth = Math.round(maxDimension * aspectRatio);
       }
       
-      console.log(`Preview size for ${detection.id}: ${previewWidth}x${previewHeight} (aspect ratio: ${aspectRatio.toFixed(2)})`);
+      console.log(`Preview size for ${viewportFrame.id}: ${previewWidth}x${previewHeight} (aspect ratio: ${aspectRatio.toFixed(2)})`);
       
       const result = await window.electronAPI.invoke(
         VIEWPORT_IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW,
         imagePath,
-        detection,
+        viewportFrame,
         { width: previewWidth, height: previewHeight }
       ) as ViewportPreviewResult;
       
       if (result.success || !result.success) { // Include both success and error results
         setState(prev => ({
           ...prev,
-          viewportPreviews: prev.viewportPreviews.some(p => p.id === detection.id)
-            ? prev.viewportPreviews.map(p => p.id === detection.id ? result : p)
+          viewportPreviews: prev.viewportPreviews.some(p => p.id === viewportFrame.id)
+            ? prev.viewportPreviews.map(p => p.id === viewportFrame.id ? result : p)
             : [...prev.viewportPreviews, result]
         }));
       }
@@ -124,14 +124,14 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
       // Add error result to previews
       const errorResult: ViewportPreviewResult = {
         success: false,
-        id: detection.id,
-        originalDetection: detection,
+        id: viewportFrame.id,
+        originalDetection: viewportFrame,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
       setState(prev => ({
         ...prev,
-        viewportPreviews: prev.viewportPreviews.some(p => p.id === detection.id)
-          ? prev.viewportPreviews.map(p => p.id === detection.id ? errorResult : p)
+        viewportPreviews: prev.viewportPreviews.some(p => p.id === viewportFrame.id)
+          ? prev.viewportPreviews.map(p => p.id === viewportFrame.id ? errorResult : p)
           : [...prev.viewportPreviews, errorResult]
       }));
     }
@@ -146,10 +146,10 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
   }, []);
 
   // Remove specific viewport preview
-  const removeViewportPreview = useCallback((detectionId: string) => {
+  const removeViewportPreview = useCallback((frameId: string) => {
     setState(prev => ({
       ...prev,
-      viewportPreviews: prev.viewportPreviews.filter(p => p.id !== detectionId)
+      viewportPreviews: prev.viewportPreviews.filter(p => p.id !== frameId)
     }));
   }, []);
 

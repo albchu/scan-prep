@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, DetectedSubImage } from '@shared/types';
-import { InteractiveDetectionOverlay } from './InteractiveDetectionOverlay';
+import { ImageLoadResult, ANALYSIS_IPC_CHANNELS, AnalysisResult, ViewportFrame } from '@shared/types';
+import { InteractiveViewportFrameOverlay } from './InteractiveViewportFrameOverlay';
 import { useImageStore } from '../../stores/imageStore';
 import { 
   formatFileSize, 
@@ -86,20 +86,20 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
   }, [updateDisplayDimensions]);
 
   // Debounced viewport preview update function
-  const debouncedUpdateViewportPreview = useCallback((detectionId: string, detection: DetectedSubImage, delay: number = 300) => {
-    const lastRotation = lastPreviewRotations.current.get(detectionId);
-    const currentRotation = detection.userRotation;
+  const debouncedUpdateViewportPreview = useCallback((frameId: string, viewportFrame: ViewportFrame, delay: number = 300) => {
+    const lastRotation = lastPreviewRotations.current.get(frameId);
+    const currentRotation = viewportFrame.userRotation;
     
     // Only update if rotation has changed significantly (more than 1 degree) or if it's the first time
     if (lastRotation === undefined || Math.abs(currentRotation - lastRotation) > 1) {
       debounceManager.current.debounce(
-        detectionId,
+        frameId,
         () => {
-          console.log(`Updating viewport preview for ${detectionId}: ${lastRotation}° → ${currentRotation}°`);
-          lastPreviewRotations.current.set(detectionId, currentRotation);
+          console.log(`Updating viewport preview for ${frameId}: ${lastRotation}° → ${currentRotation}°`);
+          lastPreviewRotations.current.set(frameId, currentRotation);
           
           if (imagePath) {
-            generateViewportPreview(imagePath, detection);
+            generateViewportPreview(imagePath, viewportFrame);
           }
         },
         delay
@@ -109,13 +109,13 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
 
   // Generate viewport previews when detections change (initial creation only)
   useEffect(() => {
-    const allDetections = clickDetections.flatMap(d => d.detectedImages);
-    allDetections.forEach(detection => {
-      // Only generate preview if we haven't seen this detection before
-      if (!lastPreviewRotations.current.has(detection.id) && imagePath) {
-        console.log(`Initial viewport preview for ${detection.id}`);
-        lastPreviewRotations.current.set(detection.id, detection.userRotation);
-        generateViewportPreview(imagePath, detection);
+    const allViewportFrames = clickDetections.flatMap(d => d.detectedImages);
+    allViewportFrames.forEach(viewportFrame => {
+      // Only generate preview if we haven't seen this frame before
+      if (!lastPreviewRotations.current.has(viewportFrame.id) && imagePath) {
+        console.log(`Initial viewport preview for ${viewportFrame.id}`);
+        lastPreviewRotations.current.set(viewportFrame.id, viewportFrame.userRotation);
+        generateViewportPreview(imagePath, viewportFrame);
       }
     });
   }, [clickDetections, imagePath, generateViewportPreview]);
@@ -139,25 +139,25 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
   /**
    * Handle rotation change from the interactive overlay (now debounced)
    */
-  const handleRotationChange = useCallback((detectionId: string, newRotation: number) => {
-    // Update the detection state immediately for smooth UI
+  const handleRotationChange = useCallback((frameId: string, newRotation: number) => {
+    // Update the viewportFrame state immediately for smooth UI
     setClickDetections(prev => prev.map(result => ({
       ...result,
-      detectedImages: result.detectedImages.map(detection => 
-        detection.id === detectionId 
-          ? { ...detection, userRotation: newRotation }
-          : detection
+      detectedImages: result.detectedImages.map(viewportFrame => 
+        viewportFrame.id === frameId 
+          ? { ...viewportFrame, userRotation: newRotation }
+          : viewportFrame
       )
     })));
 
-    // Find the updated detection and debounce the viewport preview update
-    const updatedDetection = clickDetections
+    // Find the updated viewportFrame and debounce the viewport preview update
+    const updatedViewportFrame = clickDetections
       .flatMap(d => d.detectedImages)
-      .find(d => d.id === detectionId);
+      .find(d => d.id === frameId);
       
-    if (updatedDetection) {
-      const detectionWithNewRotation = { ...updatedDetection, userRotation: newRotation };
-      debouncedUpdateViewportPreview(detectionId, detectionWithNewRotation);
+    if (updatedViewportFrame) {
+      const frameWithNewRotation = { ...updatedViewportFrame, userRotation: newRotation };
+      debouncedUpdateViewportPreview(frameId, frameWithNewRotation);
     }
   }, [clickDetections, debouncedUpdateViewportPreview]);
 
@@ -191,7 +191,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
 
       if (result.success) {
         setClickDetections(prev => [...prev, result]);
-        console.log(`Click detection found ${result.detectedImages.length} sub-images in ${result.analysisTime}ms`);
+        console.log(`Click detection found ${result.detectedImages.length} viewport frames in ${result.analysisTime}ms`);
       } else {
         console.error('Click analysis failed:', result.error);
         // TODO: Show error message to user
@@ -230,10 +230,10 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
             onClick={handleImageClick}
           />
           
-          {/* Interactive detection overlay with rotation handles */}
+          {/* Interactive viewport frame overlay with rotation handles */}
           {clickDetections.some(d => d.detectedImages.length > 0) && displayDimensions.width > 0 && displayDimensions.height > 0 && (
-            <InteractiveDetectionOverlay
-              detectedImages={clickDetections.flatMap(d => d.detectedImages)}
+            <InteractiveViewportFrameOverlay
+              viewportFrames={clickDetections.flatMap(d => d.detectedImages)}
               imageWidth={imageData.width}
               imageHeight={imageData.height}
               displayWidth={displayDimensions.width}
@@ -265,7 +265,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
           {clickDetections.length > 0 && (
             <div className="mt-2 text-sm">
               <span className="text-blue-500">
-                {clickDetections.reduce((sum, d) => sum + d.detectedImages.length, 0)} detection{clickDetections.reduce((sum, d) => sum + d.detectedImages.length, 0) !== 1 ? 's' : ''} from {clickDetections.length} click{clickDetections.length !== 1 ? 's' : ''}
+                {clickDetections.reduce((sum, d) => sum + d.detectedImages.length, 0)} viewport frame{clickDetections.reduce((sum, d) => sum + d.detectedImages.length, 0) !== 1 ? 's' : ''} from {clickDetections.length} click{clickDetections.length !== 1 ? 's' : ''}
               </span>
               {clickDetections.some(d => d.detectedImages.some(img => Math.abs(img.userRotation) > 1)) && (
                 <span className="text-orange-500 ml-2">
@@ -279,7 +279,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
         {/* Instructions and clear button */}
         <div className="space-y-2">
           <div className="text-sm text-dark-300 text-center">
-            Click on the image to detect sub-images • Drag rotation handles to adjust angles
+            Click on the image to detect viewport frames • Drag rotation handles to adjust angles
           </div>
           
           {clickDetections.length > 0 && (
@@ -288,7 +288,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
               className="w-full px-3 py-2 text-sm bg-dark-700 hover:bg-dark-600 text-dark-200 rounded-lg transition-colors"
               disabled={isAnalyzing}
             >
-              Clear Detections ({clickDetections.length})
+              Clear Viewport Frames ({clickDetections.length})
             </button>
           )}
         </div>

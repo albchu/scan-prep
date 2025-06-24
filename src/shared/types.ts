@@ -163,8 +163,8 @@ export interface BoundingBox {
   height: number;
 }
 
-// Enhanced DetectedSubImage that supports user-controlled rotation
-export interface DetectedSubImage {
+// Enhanced ViewportFrame that supports user-controlled rotation
+export interface ViewportFrame {
   id: string;
   boundingBox: BoundingBox; // Initial axis-aligned bounding box from detection
   userRotation: number; // User-applied rotation in degrees (0 by default)
@@ -174,7 +174,7 @@ export interface DetectedSubImage {
 
 export interface AnalysisResult {
   success: boolean;
-  detectedImages: DetectedSubImage[];
+  detectedImages: ViewportFrame[];
   analysisTime: number; // milliseconds
   error?: string;
   imageWidth: number;
@@ -213,7 +213,7 @@ export interface ClickCoordinate {
   y: number;
 }
 
-export interface UserDetectedSubImage extends DetectedSubImage {
+export interface UserDetectedSubImage extends ViewportFrame {
   clickPoint: ClickCoordinate;
   detectionMethod: 'automated' | 'user-click';
 }
@@ -230,14 +230,14 @@ export interface ViewportPreviewResult {
   base64?: string;
   width?: number;
   height?: number;
-  originalDetection: DetectedSubImage;
+  originalDetection: ViewportFrame;
   error?: string;
 }
 
 export interface ViewportOperations {
   'image:generate-viewport-preview': (
     imagePath: string, 
-    detection: DetectedSubImage,
+    detection: ViewportFrame,
     previewSize: { width: number; height: number }
   ) => Promise<ViewportPreviewResult>;
 }

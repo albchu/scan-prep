@@ -1,23 +1,23 @@
 import React, { useRef } from 'react';
-import { DetectedSubImage } from '@shared/types';
+import { ViewportFrame } from '@shared/types';
 import { 
   calculateScaleFactors,
   getBoundingBoxCenter,
 } from '../../utils';
 import { useRotationDrag } from '../../hooks/useRotationDrag';
 
-interface InteractiveDetectionOverlayProps {
-  detectedImages: DetectedSubImage[];
+interface InteractiveViewportFrameOverlayProps {
+  viewportFrames: ViewportFrame[];
   imageWidth: number;
   imageHeight: number;
   displayWidth: number;
   displayHeight: number;
-  onRotationChange: (detectionId: string, newRotation: number) => void;
+  onRotationChange: (frameId: string, newRotation: number) => void;
   onBackgroundClick: (event: React.MouseEvent<Element, MouseEvent>) => void;
 }
 
-export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayProps> = ({
-  detectedImages,
+export const InteractiveViewportFrameOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
+  viewportFrames,
   imageWidth,
   imageHeight,
   displayWidth,
@@ -32,18 +32,18 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
 
   // Use rotation drag hook
   const { handleRotationStart } = useRotationDrag({
-    detectedImages,
+    viewportFrames,
     scaleFactors,
     onRotationChange,
   });
 
-  const onDivMouseDown = (event: React.MouseEvent, detection: DetectedSubImage) => {
+  const onDivMouseDown = (event: React.MouseEvent, viewportFrame: ViewportFrame) => {
     // Stop propagation here to prevent background click
     event.stopPropagation();
-    handleRotationStart(event, detection, overlayRef.current);
+    handleRotationStart(event, viewportFrame, overlayRef.current);
   };
 
-  // Handle clicks on the overlay (not on detection boxes)
+  // Handle clicks on the overlay (not on viewport frames)
   const handleOverlayClick = (event: React.MouseEvent) => {
     // Forward the click to the parent component
     onBackgroundClick(event);
@@ -56,9 +56,9 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
       style={{ width: displayWidth, height: displayHeight }}
       onClick={handleOverlayClick}
     >
-      {detectedImages.map((detection) => {
-        const { x, y, width, height } = detection.boundingBox;
-        const center = getBoundingBoxCenter(detection.boundingBox, scaleFactors);
+      {viewportFrames.map((viewportFrame) => {
+        const { x, y, width, height } = viewportFrame.boundingBox;
+        const center = getBoundingBoxCenter(viewportFrame.boundingBox, scaleFactors);
         
         // Scale the position and size to match the display size
         const scaledX = x * scaleFactors.scaleX;
@@ -68,17 +68,17 @@ export const InteractiveDetectionOverlay: React.FC<InteractiveDetectionOverlayPr
         
         return (
           <div
-            key={detection.id}
+            key={viewportFrame.id}
             className="absolute border-2 border-blue-500 cursor-move pointer-events-auto"
             style={{
               left: `${scaledX}px`,
               top: `${scaledY}px`,
               width: `${scaledWidth}px`,
               height: `${scaledHeight}px`,
-              transform: `rotate(${detection.userRotation}deg)`,
+              transform: `rotate(${viewportFrame.userRotation}deg)`,
               transformOrigin: `${center.x - scaledX}px ${center.y - scaledY}px`,
             }}
-            onMouseDown={(event) => onDivMouseDown(event, detection)}
+            onMouseDown={(event) => onDivMouseDown(event, viewportFrame)}
           />
         );
       })}
