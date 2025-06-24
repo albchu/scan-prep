@@ -75,7 +75,7 @@ export const InteractiveViewportFrameOverlay: React.FC<InteractiveViewportFrameO
               top: `${scaledY}px`,
               width: `${scaledWidth}px`,
               height: `${scaledHeight}px`,
-              transform: `rotate(${viewportFrame.userRotation}deg)`,
+              transform: `rotate(${viewportFrame.rotation}deg)`,
               transformOrigin: `${center.x - scaledX}px ${center.y - scaledY}px`,
             }}
             onMouseDown={(event) => onDivMouseDown(event, viewportFrame)}

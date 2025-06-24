@@ -137,8 +137,6 @@ export class ImageAnalysisService {
     previewSize: { width: number; height: number }
   ): Promise<ViewportPreviewResult> {
     try {
-      console.log('Generating viewport preview for frame:', viewportFrame.id, 'with rotation:', viewportFrame.userRotation);
-      
       // Load the source image
       const sourceImage = await Image.load(imagePath);
       
@@ -177,7 +175,7 @@ export class ImageAnalysisService {
     previewSize: { width: number; height: number }
   ): Promise<string> {
     // If no rotation, use simple crop and scale
-    if (Math.abs(viewportFrame.userRotation) < 1) {
+    if (Math.abs(viewportFrame.rotation) < 1) {
       const croppedImage = sourceImage.crop({
         x: Math.round(viewportFrame.boundingBox.x),
         y: Math.round(viewportFrame.boundingBox.y),
@@ -199,7 +197,7 @@ export class ImageAnalysisService {
     
     // Rotate the entire image (negative angle to straighten content)
     // Note: the image-js library rotates around the center of the image
-    const rotatedImage = sourceImage.rotate(-viewportFrame.userRotation);
+    const rotatedImage = sourceImage.rotate(-viewportFrame.rotation);
     
     // Calculate the transformation from original to rotated coordinates
     // The rotation center in the original image is sourceImage.width/2, sourceImage.height/2
@@ -210,7 +208,7 @@ export class ImageAnalysisService {
     const vectorY = centerY - sourceImage.height / 2;
     
     // Calculate the angle in radians for the rotation
-    const angleRad = (-viewportFrame.userRotation * Math.PI) / 180;
+    const angleRad = (-viewportFrame.rotation * Math.PI) / 180;
     const cosAngle = Math.cos(angleRad);
     const sinAngle = Math.sin(angleRad);
     

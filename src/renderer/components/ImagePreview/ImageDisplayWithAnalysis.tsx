@@ -88,7 +88,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
   // Debounced viewport preview update function
   const debouncedUpdateViewportPreview = useCallback((frameId: string, viewportFrame: ViewportFrame, delay: number = 300) => {
     const lastRotation = lastPreviewRotations.current.get(frameId);
-    const currentRotation = viewportFrame.userRotation;
+    const currentRotation = viewportFrame.rotation;
     
     // Only update if rotation has changed significantly (more than 1 degree) or if it's the first time
     if (lastRotation === undefined || Math.abs(currentRotation - lastRotation) > 1) {
@@ -114,7 +114,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
       // Only generate preview if we haven't seen this frame before
       if (!lastPreviewRotations.current.has(viewportFrame.id) && imagePath) {
         console.log(`Initial viewport preview for ${viewportFrame.id}`);
-        lastPreviewRotations.current.set(viewportFrame.id, viewportFrame.userRotation);
+        lastPreviewRotations.current.set(viewportFrame.id, viewportFrame.rotation);
         generateViewportPreview(imagePath, viewportFrame);
       }
     });
@@ -145,7 +145,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
       ...result,
       detectedImages: result.detectedImages.map(viewportFrame => 
         viewportFrame.id === frameId 
-          ? { ...viewportFrame, userRotation: newRotation }
+          ? { ...viewportFrame, rotation: newRotation }
           : viewportFrame
       )
     })));
@@ -156,7 +156,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
       .find(d => d.id === frameId);
       
     if (updatedViewportFrame) {
-      const frameWithNewRotation = { ...updatedViewportFrame, userRotation: newRotation };
+      const frameWithNewRotation = { ...updatedViewportFrame, rotation: newRotation };
       debouncedUpdateViewportPreview(frameId, frameWithNewRotation);
     }
   }, [clickDetections, debouncedUpdateViewportPreview]);
@@ -267,7 +267,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
               <span className="text-blue-500">
                 {clickDetections.reduce((sum, d) => sum + d.detectedImages.length, 0)} viewport frame{clickDetections.reduce((sum, d) => sum + d.detectedImages.length, 0) !== 1 ? 's' : ''} from {clickDetections.length} click{clickDetections.length !== 1 ? 's' : ''}
               </span>
-              {clickDetections.some(d => d.detectedImages.some(img => Math.abs(img.userRotation) > 1)) && (
+              {clickDetections.some(d => d.detectedImages.some(img => Math.abs(img.rotation) > 1)) && (
                 <span className="text-orange-500 ml-2">
                   (rotated)
                 </span>

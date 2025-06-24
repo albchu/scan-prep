@@ -61,10 +61,10 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
           </span>
         </div>
         
-        {Math.abs(originalDetection.userRotation) > 1 && (
+        {Math.abs(originalDetection.rotation) > 1 && (
           <div className="mt-1">
             <span className="rotation-indicator text-orange-400">
-              ↻ {Math.round(originalDetection.userRotation)}°
+              ↻ {Math.round(originalDetection.rotation)}°
             </span>
           </div>
         )}

@@ -45,7 +45,7 @@ export const ViewportFrameShape: React.FC<ViewportFrameShapeProps> = ({
       />
       
       {/* Rotation angle label */}
-      {Math.abs(viewportFrame.userRotation) > 1 && (
+      {Math.abs(viewportFrame.rotation) > 1 && (
         <text
           x={center.x}
           y={center.y - 15}
@@ -55,7 +55,7 @@ export const ViewportFrameShape: React.FC<ViewportFrameShapeProps> = ({
           fontWeight="bold"
           opacity={opacity}
         >
-          {Math.round(viewportFrame.userRotation)}°
+          {Math.round(viewportFrame.rotation)}°
         </text>
       )}
     </g>

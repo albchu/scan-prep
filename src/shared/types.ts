@@ -111,7 +111,7 @@ export interface BoundingBox {
 export interface ViewportFrame {
   id: string;
   boundingBox: BoundingBox; // Initial axis-aligned bounding box from detection
-  userRotation: number; // User-applied rotation in degrees (0 by default)
+  rotation: number; // User-applied rotation in degrees (0 by default)
   area: number; // pixel area
 }
 

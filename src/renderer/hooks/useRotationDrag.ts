@@ -100,7 +100,7 @@ export function useRotationDrag({
     setDragState({
       frameId: viewportFrame.id,
       startAngle,
-      startRotation: viewportFrame.userRotation,
+      startRotation: viewportFrame.rotation,
       containerElement,
     });
   }, [scaleFactors]);

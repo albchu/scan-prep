@@ -99,7 +99,7 @@ export function createViewportFrame(
       width,
       height,
     },
-    userRotation: 0, // Initial rotation is 0 - user can adjust via UI
+    rotation: 0, // Initial rotation is 0 - user can adjust via UI
     area,
   };
 } 
