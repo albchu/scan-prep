@@ -110,7 +110,6 @@ export class IPCHandlers {
         console.error('Error generating viewport preview:', error);
         return {
           success: false,
-          id: viewportFrame.id,
           viewportFrame,
           error: error instanceof Error ? error.message : 'Unknown error',
         };

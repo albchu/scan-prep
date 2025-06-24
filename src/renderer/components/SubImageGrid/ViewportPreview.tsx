@@ -8,7 +8,7 @@ interface ViewportPreviewProps {
 export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
   viewportPreview
 }) => {
-  const { base64, width, height, viewportFrame, success, error } = viewportPreview;
+  const { base64, viewportFrame, success, error } = viewportPreview;
   
   if (!success || !base64) {
     return (
@@ -48,7 +48,7 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
       <div className="preview-info">
         <div className="flex items-center justify-between">
           <span className="dimensions text-dark-300">
-            {width}×{height}px
+            {viewportFrame.boundingBox.width}×{viewportFrame.boundingBox.height}px
           </span>
         </div>
         

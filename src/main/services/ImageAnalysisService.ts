@@ -149,17 +149,13 @@ export class ImageAnalysisService {
       
       return {
         success: true,
-        id: viewportFrame.id,
         base64,
-        width: previewSize.width,
-        height: previewSize.height,
         viewportFrame,
       };
     } catch (error) {
       console.error('Error generating viewport preview:', error);
       return {
         success: false,
-        id: viewportFrame.id,
         viewportFrame,
         error: error instanceof Error ? error.message : 'Unknown error during viewport preview generation',
       };

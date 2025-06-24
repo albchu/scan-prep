@@ -115,8 +115,8 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
       if (result.success || !result.success) { // Include both success and error results
         setState(prev => ({
           ...prev,
-          viewportPreviews: prev.viewportPreviews.some(p => p.id === viewportFrame.id)
-            ? prev.viewportPreviews.map(p => p.id === viewportFrame.id ? result : p)
+          viewportPreviews: prev.viewportPreviews.some(p => p.viewportFrame.id === viewportFrame.id)
+            ? prev.viewportPreviews.map(p => p.viewportFrame.id === viewportFrame.id ? result : p)
             : [...prev.viewportPreviews, result]
         }));
       }
@@ -125,14 +125,13 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
       // Add error result to previews
       const errorResult: ViewportFrameResult = {
         success: false,
-        id: viewportFrame.id,
         viewportFrame,
         error: error instanceof Error ? error.message : 'Unknown error'
       };
       setState(prev => ({
         ...prev,
-        viewportPreviews: prev.viewportPreviews.some(p => p.id === viewportFrame.id)
-          ? prev.viewportPreviews.map(p => p.id === viewportFrame.id ? errorResult : p)
+        viewportPreviews: prev.viewportPreviews.some(p => p.viewportFrame.id === viewportFrame.id)
+          ? prev.viewportPreviews.map(p => p.viewportFrame.id === viewportFrame.id ? errorResult : p)
           : [...prev.viewportPreviews, errorResult]
       }));
     }
@@ -150,7 +149,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({ children
   const removeViewportPreview = useCallback((frameId: string) => {
     setState(prev => ({
       ...prev,
-      viewportPreviews: prev.viewportPreviews.filter(p => p.id !== frameId)
+      viewportPreviews: prev.viewportPreviews.filter(p => p.viewportFrame.id !== frameId)
     }));
   }, []);
 

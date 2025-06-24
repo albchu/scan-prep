@@ -82,10 +82,7 @@ export interface AnalysisResult {
 
 export interface ViewportFrameResult {
   success: boolean;
-  id: string;
   base64?: string;
-  width?: number;
-  height?: number;
   viewportFrame: ViewportFrame;
   error?: string;
 } 

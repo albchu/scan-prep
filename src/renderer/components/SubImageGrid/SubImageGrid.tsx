@@ -26,7 +26,7 @@ export const SubImageGrid: React.FC<SubImageGridProps> = ({
       <div className="grid-container">
         {viewportPreviews.map((preview) => (
           <ViewportPreview
-            key={preview.id}
+            key={preview.viewportFrame.id}
             viewportPreview={preview}
           />
         ))}
