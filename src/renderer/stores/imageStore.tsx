@@ -96,7 +96,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
   }, []);
 
   const updateViewportPreview = useCallback(
-    debounce(async (frameId: string, imagePath: string) => {
+    async (frameId: string, imagePath: string) => {
       const viewportFrame = state.viewportPreviews.find(
         (p) => p.viewportFrame?.id === frameId
       )?.viewportFrame;
@@ -120,7 +120,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
             )
           : [...prev.viewportPreviews, result],
       }));
-    }, 300),
+    },
     [state.viewportPreviews]
   );
 
