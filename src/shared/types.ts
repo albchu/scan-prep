@@ -138,11 +138,6 @@ export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptions = {
   edgeSensitivity: 0.5,
 };
 
-export interface ClickCoordinate {
-  x: number;
-  y: number;
-}
-
 export interface ViewportPreviewResult {
   success: boolean;
   id: string;

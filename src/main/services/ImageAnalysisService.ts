@@ -5,7 +5,6 @@ import {
   DEFAULT_ANALYSIS_OPTIONS,
   ViewportFrame,
   ViewportPreviewResult,
-  BoundingBox,
 } from '@shared/types';
 import {
   detectBoundaryPoints,
@@ -243,65 +242,5 @@ export class ImageAnalysisService {
     
     // Convert to base64
     return scaledImage.toDataURL();
-  }
-
-  /**
-   * Calculate rotated corner coordinates
-   */
-  private calculateRotatedCorners(
-    boundingBox: BoundingBox, 
-    rotationDegrees: number
-  ): { x: number; y: number }[] {
-    const centerX = boundingBox.x + boundingBox.width / 2;
-    const centerY = boundingBox.y + boundingBox.height / 2;
-    
-    const angleRad = (rotationDegrees * Math.PI) / 180;
-    const cos = Math.cos(angleRad);
-    const sin = Math.sin(angleRad);
-    
-    const halfWidth = boundingBox.width / 2;
-    const halfHeight = boundingBox.height / 2;
-    
-    return [
-      { x: -halfWidth, y: -halfHeight }, // Top-left
-      { x: halfWidth, y: -halfHeight },  // Top-right
-      { x: halfWidth, y: halfHeight },   // Bottom-right
-      { x: -halfWidth, y: halfHeight },  // Bottom-left
-    ].map(corner => ({
-      x: centerX + corner.x * cos - corner.y * sin,
-      y: centerY + corner.x * sin + corner.y * cos,
-    }));
-  }
-
-  /**
-   * Calculate expanded region that encompasses the rotated overlay frame
-   */
-  private calculateExpandedRegion(
-    boundingBox: BoundingBox, 
-    rotationDegrees: number,
-    imageWidth: number,
-    imageHeight: number
-  ): BoundingBox {
-    // Get the rotated corners of the overlay frame
-    const corners = this.calculateRotatedCorners(boundingBox, rotationDegrees);
-    
-    // Find the minimum bounding rectangle that contains all corners
-    const minX = Math.max(0, Math.min(...corners.map(c => c.x)));
-    const minY = Math.max(0, Math.min(...corners.map(c => c.y)));
-    const maxX = Math.min(imageWidth, Math.max(...corners.map(c => c.x)));
-    const maxY = Math.min(imageHeight, Math.max(...corners.map(c => c.y)));
-    
-    // Add padding to ensure we capture enough content for rotation
-    // Increase padding for larger rotation angles
-    const rotationFactor = Math.min(1, Math.abs(rotationDegrees) / 90);
-    const basePadding = Math.max(boundingBox.width, boundingBox.height) * 0.2;
-    const padding = basePadding * (1 + rotationFactor);
-    
-    return {
-      x: Math.round(Math.max(0, minX - padding)),
-      y: Math.round(Math.max(0, minY - padding)),
-      width: Math.round(Math.min(imageWidth, maxX + padding) - Math.max(0, minX - padding)),
-      height: Math.round(Math.min(imageHeight, maxY + padding) - Math.max(0, minY - padding))
-    };
   }
 } 
