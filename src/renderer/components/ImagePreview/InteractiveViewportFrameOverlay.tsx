@@ -13,7 +13,7 @@ interface InteractiveViewportFrameOverlayProps {
   displayWidth: number;
   displayHeight: number;
   onRotationChange: (frameId: string, newRotation: number) => void;
-  onBackgroundClick: (event: React.MouseEvent<Element, MouseEvent>) => void;
+  handleImageClick: (event: React.MouseEvent<Element, MouseEvent>) => void;
 }
 
 export const InteractiveViewportFrameOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
@@ -23,7 +23,7 @@ export const InteractiveViewportFrameOverlay: React.FC<InteractiveViewportFrameO
   displayWidth,
   displayHeight,
   onRotationChange,
-  onBackgroundClick,
+  handleImageClick,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -43,18 +43,13 @@ export const InteractiveViewportFrameOverlay: React.FC<InteractiveViewportFrameO
     handleRotationStart(event, viewportFrame, overlayRef.current);
   };
 
-  // Handle clicks on the overlay (not on viewport frames)
-  const handleOverlayClick = (event: React.MouseEvent) => {
-    // Forward the click to the parent component
-    onBackgroundClick(event);
-  };
-
   return (
     <div 
       ref={overlayRef}
       className="absolute inset-0 cursor-crosshair" 
       style={{ width: displayWidth, height: displayHeight }}
-      onClick={handleOverlayClick}
+      onClick={handleImageClick}
+      data-element-type="overlay-background"
     >
       {viewportFrames.map((viewportFrame) => {
         const { x, y, width, height } = viewportFrame.boundingBox;
@@ -79,6 +74,8 @@ export const InteractiveViewportFrameOverlay: React.FC<InteractiveViewportFrameO
               transformOrigin: `${center.x - scaledX}px ${center.y - scaledY}px`,
             }}
             onMouseDown={(event) => onDivMouseDown(event, viewportFrame)}
+            data-element-type="viewport-frame"
+            data-frame-id={viewportFrame.id}
           />
         );
       })}
