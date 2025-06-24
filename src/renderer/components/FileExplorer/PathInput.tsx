@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { IPC_CHANNELS } from '@shared/types';
+import { IPC_CHANNELS } from '@shared/constants';
 
 // Type declaration for electronAPI
 declare global {

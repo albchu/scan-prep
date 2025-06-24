@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { ImageLoadResult, APP_CONSTANTS } from '@shared/types';
+import { ImageLoadResult } from '@shared/types';
+import { APP_CONSTANTS } from '@shared/constants';
 
 export class ImageProcessor {
   /**

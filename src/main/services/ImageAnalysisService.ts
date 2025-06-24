@@ -2,10 +2,10 @@ import { Image } from 'image-js';
 import {
   AnalysisResult,
   AnalysisOptions,
-  DEFAULT_ANALYSIS_OPTIONS,
   ViewportFrame,
   ViewportFrameResult,
 } from '@shared/types';
+import { DEFAULT_ANALYSIS_OPTIONS } from '@shared/constants';
 import {
   detectBoundaryPoints,
   validateClickCoordinates,

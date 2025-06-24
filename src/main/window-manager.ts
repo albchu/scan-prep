@@ -1,6 +1,7 @@
 import { BrowserWindow, Menu, shell, app } from 'electron';
 import * as path from 'path';
-import { WindowOptions, APP_CONSTANTS } from '@shared/types';
+import { WindowOptions } from '@shared/types';
+import { APP_CONSTANTS } from '@shared/constants';
 
 export class WindowManager {
   private mainWindow: BrowserWindow | null = null;

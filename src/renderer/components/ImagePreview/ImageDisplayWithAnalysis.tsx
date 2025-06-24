@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { ImageLoadResult, IPC_CHANNELS, AnalysisResult, ViewportFrame } from '@shared/types';
+import { ImageLoadResult, AnalysisResult, ViewportFrame } from '@shared/types';
+import { IPC_CHANNELS } from '@shared/constants';
 import { InteractiveViewportFrameOverlay } from './InteractiveViewportFrameOverlay';
 import { useImageStore } from '../../stores/imageStore';
 import { 

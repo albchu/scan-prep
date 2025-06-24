@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { DirectoryEntry, IPC_CHANNELS } from '@shared/types';
+import { DirectoryEntry } from '@shared/types';
+import { IPC_CHANNELS } from '@shared/constants';
 import { HierarchicalFileRow, TreeNode } from './HierarchicalFileRow';
 
 interface Props {

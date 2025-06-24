@@ -2,7 +2,8 @@ import { ipcMain } from 'electron';
 import { FileManager } from './services/FileManager';
 import { ImageProcessor } from './services/ImageProcessor';
 import { ImageAnalysisService } from './services/ImageAnalysisService';
-import { IPC_CHANNELS, DirectoryEntry, FileValidationResult, EnhancedFileInfo, ImageLoadResult, AnalysisResult, AnalysisOptions, ViewportFrameResult, ViewportFrame } from '@shared/types';
+import { DirectoryEntry, FileValidationResult, EnhancedFileInfo, ImageLoadResult, AnalysisResult, AnalysisOptions, ViewportFrameResult, ViewportFrame } from '@shared/types';
+import { IPC_CHANNELS } from '@shared/constants';
 
 export class IPCHandlers {
   private fileManager: FileManager;

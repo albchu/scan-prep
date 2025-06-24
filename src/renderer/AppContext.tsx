@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { DirectoryEntry, IPC_CHANNELS } from '@shared/types';
+import { DirectoryEntry } from '@shared/types';
+import { IPC_CHANNELS } from '@shared/constants';
 
 interface AppContextType {
   // Directory and file state

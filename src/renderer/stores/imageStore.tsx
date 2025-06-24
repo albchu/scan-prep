@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { ImageState, IPC_CHANNELS, ImageLoadResult, ViewportFrameResult, ViewportFrame } from '@shared/types';
+import { ImageState, ImageLoadResult, ViewportFrameResult, ViewportFrame } from '@shared/types';
+import { IPC_CHANNELS } from '@shared/constants';
 
 const initialState: ImageState = {
   loading: false,

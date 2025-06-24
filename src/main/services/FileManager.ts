@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { DirectoryEntry, FileValidationResult, APP_CONSTANTS, EnhancedFileInfo } from '@shared/types';
+import { DirectoryEntry, FileValidationResult, EnhancedFileInfo } from '@shared/types';
+import { APP_CONSTANTS } from '@shared/constants';
 
 export class FileManager {
   /**
