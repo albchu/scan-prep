@@ -5,7 +5,7 @@ export const IPC_CHANNELS = {
   FILE_READ_DIRECTORY: 'file:read-directory',
   FILE_VALIDATE_PATH: 'file:validate-path',
   GENERATE_VIEWPORT_PREVIEW: 'image:generate-viewport-preview',
-  IMAGE_ANALYZE_CLICK: 'image:analyze-click',
+  GENERATE_VIEWPORT_FRAME: 'image:generate-viewport-frame',
   IMAGE_LOAD: 'image:load',
 } as const;
 

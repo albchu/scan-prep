@@ -186,7 +186,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
 
     try {
       const result = await window.electronAPI.invoke(
-        IPC_CHANNELS.IMAGE_ANALYZE_CLICK,
+        IPC_CHANNELS.GENERATE_VIEWPORT_FRAME,
         imagePath,
         imageCoords.x,
         imageCoords.y

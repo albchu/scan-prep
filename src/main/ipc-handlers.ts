@@ -80,7 +80,7 @@ export class IPCHandlers {
     });
 
     // Handle click-based image analysis requests
-    ipcMain.handle(IPC_CHANNELS.IMAGE_ANALYZE_CLICK, async (event, imagePath: string, clickX: number, clickY: number, options?: Partial<AnalysisOptions>): Promise<AnalysisResult> => {
+    ipcMain.handle(IPC_CHANNELS.GENERATE_VIEWPORT_FRAME, async (event, imagePath: string, clickX: number, clickY: number, options?: Partial<AnalysisOptions>): Promise<AnalysisResult> => {
       try {
         console.log('Analyzing image with click:', imagePath, 'at coordinates:', { clickX, clickY }, 'with options:', options);
         // Refactor note: This result can only ever return a max of 1 viewport frame. Revise naming this functionality to be clearer.
@@ -127,7 +127,7 @@ export class IPCHandlers {
     ipcMain.removeHandler(IPC_CHANNELS.FILE_VALIDATE_PATH);
     ipcMain.removeHandler(IPC_CHANNELS.FILE_GET_FILE_INFO);
     ipcMain.removeHandler(IPC_CHANNELS.IMAGE_LOAD);
-    ipcMain.removeHandler(IPC_CHANNELS.IMAGE_ANALYZE_CLICK);
+    ipcMain.removeHandler(IPC_CHANNELS.GENERATE_VIEWPORT_FRAME);
     ipcMain.removeHandler(IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW);
   }
 } 
