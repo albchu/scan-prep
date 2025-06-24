@@ -287,10 +287,6 @@ body {
   @apply text-orange-400;
 }
 
-.confidence {
-  @apply text-green-400;
-}
-
 .dimensions {
   @apply text-dark-300;
 } 

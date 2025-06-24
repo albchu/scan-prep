@@ -50,9 +50,6 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
           <span className="dimensions text-dark-300">
             {width}×{height}px
           </span>
-          <span className="confidence text-green-400">
-            {Math.round(originalDetection.confidence * 100)}%
-          </span>
         </div>
         
         <div className="flex items-center justify-between text-xs">
