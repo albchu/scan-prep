@@ -12,6 +12,7 @@ export class IPCHandlers {
 
   constructor() {
     this.fileManager = new FileManager();
+    // Refactor note: These classes are not used well. Might as well be immutable constants from a util file.
     this.imageProcessor = new ImageProcessor();
     this.imageAnalysisService = new ImageAnalysisService();
     this.registerHandlers();
@@ -82,6 +83,7 @@ export class IPCHandlers {
     ipcMain.handle(IPC_CHANNELS.IMAGE_ANALYZE_CLICK, async (event, imagePath: string, clickX: number, clickY: number, options?: Partial<AnalysisOptions>): Promise<AnalysisResult> => {
       try {
         console.log('Analyzing image with click:', imagePath, 'at coordinates:', { clickX, clickY }, 'with options:', options);
+        // Refactor note: This result can only ever return a max of 1 viewport frame. Revise naming this functionality to be clearer.
         const result = await this.imageAnalysisService.analyzeImageWithClick(imagePath, clickX, clickY, options);
         console.log(`Click analysis result: ${result.success ? 'success' : 'failed'}, found ${result.viewportFrames.length} sub-images`);
         return result;
@@ -92,8 +94,6 @@ export class IPCHandlers {
           viewportFrames: [],
           analysisTime: 0,
           error: error instanceof Error ? error.message : 'Unknown error',
-          imageWidth: 0,
-          imageHeight: 0,
         };
       }
     });

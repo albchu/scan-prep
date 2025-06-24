@@ -109,6 +109,7 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
     }
   }, [imagePath, generateViewportPreview]);
 
+  // Refactor note: This is a gross way to do this. Might as well just use the other result type and generate it directly together.
   // Generate viewport previews when detections change (initial creation only)
   useEffect(() => {
     const allViewportFrames = analysisResults.flatMap(d => d.viewportFrames);
@@ -193,7 +194,6 @@ export const ImageDisplayWithAnalysis: React.FC<ImageDisplayWithAnalysisProps> =
 
       if (result.success) {
         setAnalysisResults(prev => [...prev, result]);
-        console.log(`Click detection found ${result.viewportFrames.length} viewport frames in ${result.analysisTime}ms`);
       } else {
         console.error('Click analysis failed:', result.error);
         // TODO: Show error message to user

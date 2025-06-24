@@ -57,8 +57,6 @@ export class ImageAnalysisService {
         success: true,
         viewportFrames: viewportFrame ? [viewportFrame] : [],
         analysisTime,
-        imageWidth: image.width,
-        imageHeight: image.height,
       };
     } catch (error) {
       console.error('Error analyzing image with click:', error);
@@ -67,8 +65,6 @@ export class ImageAnalysisService {
         viewportFrames: [],
         analysisTime: Date.now() - startTime,
         error: error instanceof Error ? error.message : 'Unknown error during click analysis',
-        imageWidth: 0,
-        imageHeight: 0,
       };
     }
   }

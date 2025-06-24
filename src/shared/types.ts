@@ -71,20 +71,21 @@ export interface ViewportFrame {
   area: number; // pixel area
 }
 
+// Refactor note: We could consider replacing all usages of this with ViewportFrameResult instead.
+// Need to investigate the base64 bits. I think its ok to remove this.
 export interface AnalysisResult {
   success: boolean;
   viewportFrames: ViewportFrame[];
   analysisTime: number; // milliseconds
   error?: string;
-  imageWidth: number;
-  imageHeight: number;
 }
 
+// Refactor note: This is more of a ViewportPreview
 export interface ViewportFrameResult {
-  success: boolean;
   base64?: string;
-  viewportFrame: ViewportFrame;
   error?: string;
+  success: boolean;
+  viewportFrame: ViewportFrame;
 } 
 
 export interface AnalysisOptions {
