@@ -6,7 +6,7 @@ import {
   getBoundingBoxCenter,
   getMousePositionRelativeToElement,
   ScaleFactors
-} from '../utils';
+} from '../utils/geometryUtils';
 
 interface DragState {
   frameId: string;

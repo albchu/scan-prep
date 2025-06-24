@@ -10,7 +10,7 @@ export const ViewportPreview: React.FC<ViewportPreviewProps> = ({
 }) => {
   const { base64, viewportFrame, success, error } = viewportPreview;
   
-  if (!success || !base64) {
+  if (!success || !base64 || !viewportFrame) {
     return (
       <div className="viewport-preview">
         <div className="preview-container">

@@ -73,23 +73,26 @@ export interface ViewportFrame {
 
 // Refactor note: We could consider replacing all usages of this with ViewportFrameResult instead.
 // Need to investigate the base64 bits. I think its ok to remove this.
-export interface AnalysisResult {
-  success: boolean;
-  viewportFrames: ViewportFrame[];
-  analysisTime: number; // milliseconds
-  error?: string;
-}
+// export interface AnalysisResult {
+//   success: boolean;
+//   viewportFrames: ViewportFrame[];
+//   analysisTime: number; // milliseconds
+//   error?: string;
+// }
 
 // Refactor note: This is more of a ViewportPreview
 export interface ViewportFrameResult {
+  analysisTime?: number; // milliseconds
   base64?: string;
   error?: string;
   success: boolean;
-  viewportFrame: ViewportFrame;
+  viewportFrame?: ViewportFrame;
 } 
 
 export interface AnalysisOptions {
   backgroundColor: 'white' | 'black' | 'auto'; // Scanner background
+
+  // Refactor notes: I think i nuked the usage of this.
   minAreaThreshold: number; // Minimum area in pixels to consider
   minDimensionThreshold: number; // Minimum width or height in pixels
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Point } from '../../utils';
+import { Point } from '../../utils/geometryUtils';
 
 interface RotationArrowProps {
   position: Point;

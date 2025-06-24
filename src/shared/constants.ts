@@ -33,4 +33,6 @@ export const DEFAULT_ANALYSIS_OPTIONS: AnalysisOptions = {
   backgroundColor: 'white',
   minAreaThreshold: 2500, // ~50x50 pixels minimum
   minDimensionThreshold: 30, // At least 30 pixels in smallest dimension
-}; 
+};
+
+export const MAX_FRAME_PREVIEW_DIMENSION = 200;

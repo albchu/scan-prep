@@ -1,6 +1,6 @@
 import React from 'react';
 import { ViewportFrame } from '@shared/types';
-import { Point, createPolygonPath } from '../../utils';
+import { Point, createPolygonPath } from '../../utils/geometryUtils';
 
 interface ViewportFrameShapeProps {
   viewportFrame: ViewportFrame;

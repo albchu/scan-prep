@@ -8,13 +8,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const allowedChannels = [
       'file:read-directory',
       'file:validate-path',
-      // Phase 3 channels
       'file:get-file-info',
-      // Phase 4 channels
       'image:load',
-      // Phase 5 channels
-      'image:analyze-click',
-      // Viewport preview channels
+      'image:generate-viewport-frame',
       'image:generate-viewport-preview',
     ];
     

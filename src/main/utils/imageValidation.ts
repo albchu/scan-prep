@@ -79,17 +79,11 @@ export function calculateBoundingBox(
 export function createViewportFrame(
   boundingBox: { x: number; y: number; width: number; height: number },
   options: AnalysisOptions
-): ViewportFrame | null {
+): ViewportFrame {
   // Ensure minimum dimensions
   const width = Math.max(boundingBox.width, options.minDimensionThreshold);
   const height = Math.max(boundingBox.height, options.minDimensionThreshold);
   const area = width * height;
-
-  // Check if detected area meets minimum threshold
-  if (area < options.minAreaThreshold) {
-    console.log(`Detected area ${area} is below minimum threshold ${options.minAreaThreshold}`);
-    return null;
-  }
 
   return {
     id: uuidv4(),

@@ -1,17 +1,21 @@
-import React from 'react';
-import { ViewportFrameResult } from '@shared/types';
-import { ViewportPreview } from './ViewportPreview';
-import { SubImageGridPlaceholder } from './SubImageGridPlaceholder';
+import React from "react";
+import { ViewportFrameResult } from "@shared/types";
+import { ViewportPreview } from "./ViewportPreview";
+import { SubImageGridPlaceholder } from "./SubImageGridPlaceholder";
 
 interface SubImageGridProps {
   viewportPreviews: ViewportFrameResult[];
 }
 
 export const SubImageGrid: React.FC<SubImageGridProps> = ({
-  viewportPreviews
+  viewportPreviews,
 }) => {
-  console.log('SubImageGrid received viewport previews:', viewportPreviews.length, viewportPreviews);
-  
+  console.log(
+    "SubImageGrid received viewport previews:",
+    viewportPreviews.length,
+    viewportPreviews
+  );
+
   if (viewportPreviews.length === 0) {
     return <SubImageGridPlaceholder />;
   }
@@ -24,13 +28,18 @@ export const SubImageGrid: React.FC<SubImageGridProps> = ({
         </h3>
       </div>
       <div className="grid-container">
-        {viewportPreviews.map((preview) => (
-          <ViewportPreview
-            key={preview.viewportFrame.id}
-            viewportPreview={preview}
-          />
-        ))}
+        {viewportPreviews.map((preview) => {
+          if (!preview.viewportFrame) {
+            return null;
+          }
+          return (
+            <ViewportPreview
+              key={preview.viewportFrame.id}
+              viewportPreview={preview}
+            />
+          );
+        })}
       </div>
     </div>
   );
-}; 
+};

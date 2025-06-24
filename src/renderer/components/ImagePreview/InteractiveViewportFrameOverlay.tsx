@@ -3,7 +3,7 @@ import { ViewportFrame } from '@shared/types';
 import { 
   calculateScaleFactors,
   getBoundingBoxCenter,
-} from '../../utils';
+} from '../../utils/geometryUtils';
 import { useRotationDrag } from '../../hooks/useRotationDrag';
 
 interface InteractiveViewportFrameOverlayProps {
