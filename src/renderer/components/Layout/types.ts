@@ -24,9 +24,9 @@ export const DEFAULT_INITIAL_WIDTHS = {
 } as const;
 
 export const COLUMN_TITLES = {
-  left: 'File Explorer',
-  middle: 'Image Preview',
-  right: 'Extracted Images',
+  left: 'File Tree',
+  middle: 'Editor',
+  right: 'Frames',
 } as const;
 
 export const COLUMN_ANIMATIONS = {

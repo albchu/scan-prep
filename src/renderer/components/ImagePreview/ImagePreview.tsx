@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useImageStore } from '../../stores/imageStore';
 import { EmptyState } from './EmptyState';
 import { LoadingSpinner } from './LoadingSpinner';
-import { ImageDisplayWithAnalysis } from './ImageDisplayWithAnalysis';
+import { ImageBoard } from './ImageBoard';
 
 interface ImagePreviewProps {
   selectedImage: string | null;
@@ -57,7 +57,7 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({ selectedImage }) => 
   // Loaded state
   if (loaded && imageData && selectedImage) {
     const fileName = selectedImage.split('/').pop() || selectedImage.split('\\').pop() || 'Unknown';
-    return <ImageDisplayWithAnalysis imageData={imageData} fileName={fileName} imagePath={selectedImage} />;
+    return <ImageBoard imageData={imageData} fileName={fileName} imagePath={selectedImage} />;
   }
 
   // Empty state

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { ImageLoadResult, ViewportFrameResult } from "@shared/types";
 import { IPC_CHANNELS } from "@shared/constants";
-import { InteractiveViewportFrameOverlay } from "./InteractiveViewportFrameOverlay";
+import { FramesOverlay } from "./FramesOverlay";
 import { useImageStore } from "../../stores/imageStore";
 import {
   formatFileSize,
@@ -10,15 +10,17 @@ import {
   getImageRenderingStyle,
 } from "../../utils/imageUtils";
 
-interface ImageDisplayWithAnalysisProps {
+interface ImageBoardProps {
   imagePath: string;
   fileName: string;
   imageData: ImageLoadResult["data"];
 }
 
-export const ImageDisplayWithAnalysis: React.FC<
-  ImageDisplayWithAnalysisProps
-> = ({ imagePath, fileName, imageData }) => {
+export const ImageBoard: React.FC<ImageBoardProps> = ({
+  imagePath,
+  fileName,
+  imageData,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -103,10 +105,16 @@ export const ImageDisplayWithAnalysis: React.FC<
   const handleImageClick = useCallback(
     async (event: React.MouseEvent<Element, MouseEvent>) => {
       const target = event.target as HTMLElement;
-      const elementType = target.getAttribute('data-element-type');
-    
+      const elementType = target.getAttribute("data-element-type");
+
       // When clicking a viewport frame, the user does not want to create another frame
-      if (elementType === 'viewport-frame' || !imageRef.current || !imageData || isAnalyzing) return;
+      if (
+        elementType === "viewport-frame" ||
+        !imageRef.current ||
+        !imageData ||
+        isAnalyzing
+      )
+        return;
 
       // Get click coordinates relative to the image
       const rect = imageRef.current.getBoundingClientRect();
@@ -180,7 +188,7 @@ export const ImageDisplayWithAnalysis: React.FC<
             onLoad={updateDisplayDimensions}
           />
 
-          <InteractiveViewportFrameOverlay
+          <FramesOverlay
             viewportFrames={viewportPreviews
               .filter((d) => !d.error && d.viewportFrame)
               .map((d) => d.viewportFrame!)}

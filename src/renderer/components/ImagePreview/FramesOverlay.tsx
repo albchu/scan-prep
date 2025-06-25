@@ -16,7 +16,7 @@ interface InteractiveViewportFrameOverlayProps {
   handleImageClick: (event: React.MouseEvent<Element, MouseEvent>) => void;
 }
 
-export const InteractiveViewportFrameOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
+export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
   viewportFrames,
   imageWidth,
   imageHeight,
@@ -64,6 +64,8 @@ export const InteractiveViewportFrameOverlay: React.FC<InteractiveViewportFrameO
         return (
           <div
             key={viewportFrame.id}
+            data-element-type="viewport-frame"
+            data-frame-id={viewportFrame.id}
             className="absolute border-2 border-blue-500 cursor-move pointer-events-auto"
             style={{
               left: `${scaledX}px`,
@@ -74,8 +76,6 @@ export const InteractiveViewportFrameOverlay: React.FC<InteractiveViewportFrameO
               transformOrigin: `${center.x - scaledX}px ${center.y - scaledY}px`,
             }}
             onMouseDown={(event) => onDivMouseDown(event, viewportFrame)}
-            data-element-type="viewport-frame"
-            data-frame-id={viewportFrame.id}
           />
         );
       })}

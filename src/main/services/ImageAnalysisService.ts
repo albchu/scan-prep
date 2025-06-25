@@ -225,15 +225,20 @@ export class ImageAnalysisService {
       ),
     });
 
-    // Scale to final preview size
-    const previewSize = getViewportFramePreviewDimensions(viewportFrame);
-    const scaledImage = croppedImage.resize({
-      width: previewSize.width,
-      height: previewSize.height,
-    });
+    return croppedImage.toDataURL();
 
-    // Convert to base64
-    return scaledImage.toDataURL();
+    // TODO: I honestly dont know if its worthwhile to scale it down here or just keep the full resolution versions all the time.
+    // Disabled on June 24, 2025. If its been a while and this is still disabled, then we should remove this code.
+    
+    // // Scale to final preview size
+    // const previewSize = getViewportFramePreviewDimensions(viewportFrame);
+    // const scaledImage = croppedImage.resize({
+    //   width: previewSize.width,
+    //   height: previewSize.height,
+    // });
+
+    // // Convert to base64
+    // return scaledImage.toDataURL();
   }
 }
 
