@@ -416,4 +416,196 @@ export function getOppositeEdge(edge: 'top' | 'right' | 'bottom' | 'left'): 'top
     'left': 'right' as const
   };
   return opposites[edge];
+}
+
+// ===== PHASE 3: SPATIAL RESIZE ALGORITHM FOR SPATIAL EDGE-FIXED RESIZE =====
+
+/**
+ * Calculate new frame dimensions based on resize operation
+ * @param originalWidth - Current frame width
+ * @param originalHeight - Current frame height
+ * @param resizeEdge - Which edge is being resized
+ * @param localMouseDelta - Mouse delta in frame local coordinates
+ * @param minWidth - Minimum allowed width
+ * @param minHeight - Minimum allowed height
+ * @returns New frame dimensions
+ */
+export function calculateNewFrameDimensions(
+  originalWidth: number,
+  originalHeight: number, 
+  resizeEdge: 'top' | 'right' | 'bottom' | 'left',
+  localMouseDelta: Point,
+  minWidth: number = 20,
+  minHeight: number = 20
+): {width: number, height: number} {
+  let newWidth = originalWidth;
+  let newHeight = originalHeight;
+  
+  switch(resizeEdge) {
+    case 'top':
+      newHeight = originalHeight - localMouseDelta.y;
+      break;
+    case 'right':  
+      newWidth = originalWidth + localMouseDelta.x;
+      break;
+    case 'bottom':
+      newHeight = originalHeight + localMouseDelta.y;
+      break;
+    case 'left':
+      newWidth = originalWidth - localMouseDelta.x;
+      break;
+  }
+  
+  // Prevent negative sizes that would flip the object
+  newWidth = Math.max(minWidth, newWidth);
+  newHeight = Math.max(minHeight, newHeight);
+  
+  return { width: newWidth, height: newHeight };
+}
+
+/**
+ * Calculate new frame center that maintains fixed edge constraint
+ * @param fixedEdgeCenter - Center point of the edge that should remain fixed
+ * @param newWidth - New frame width
+ * @param newHeight - New frame height
+ * @param frameRotation - Frame rotation in degrees
+ * @param resizeEdge - Which edge was resized
+ * @returns New frame center point
+ */
+export function calculateNewFrameCenter(
+  fixedEdgeCenter: Point,
+  newWidth: number,
+  newHeight: number,
+  frameRotation: number,
+  resizeEdge: 'top' | 'right' | 'bottom' | 'left'
+): Point {
+  // Distance from center to each edge in local coordinates
+  const localDistances = {
+    'top': {x: 0, y: -newHeight/2},
+    'right': {x: newWidth/2, y: 0},
+    'bottom': {x: 0, y: newHeight/2}, 
+    'left': {x: -newWidth/2, y: 0}
+  };
+  
+  // Use resizeEdge directly (vector from resized edge to center)
+  const localDistance = localDistances[resizeEdge];
+  
+  // Transform distance from local to global coordinates
+  const angleRad = (frameRotation * Math.PI) / 180;
+  const globalDistance = {
+    x: localDistance.x * Math.cos(angleRad) - localDistance.y * Math.sin(angleRad),
+    y: localDistance.x * Math.sin(angleRad) + localDistance.y * Math.cos(angleRad)
+  };
+  
+  // New center = fixed edge center + distance from resized edge to center
+  return {
+    x: fixedEdgeCenter.x + globalDistance.x,
+    y: fixedEdgeCenter.y + globalDistance.y
+  };
+}
+
+/**
+ * Calculate axis-aligned bounding box from rotated frame
+ * @param frameCenter - Center point of the frame
+ * @param frameWidth - Unrotated width of the frame
+ * @param frameHeight - Unrotated height of the frame
+ * @param frameRotation - Frame rotation in degrees
+ * @returns Axis-aligned bounding box that contains the rotated frame
+ */
+export function calculateAxisAlignedBoundingBox(
+  frameCenter: Point,
+  frameWidth: number, 
+  frameHeight: number,
+  frameRotation: number
+): BoundingBox {
+  // IMPORTANT: frameWidth and frameHeight must be the unrotated (local) dimensions
+  const corners = calculateRotatedCorners(frameCenter, frameWidth, frameHeight, frameRotation);
+  
+  // Find axis-aligned bounding box that contains all corners
+  const minX = Math.min(...corners.map(c => c.x));
+  const maxX = Math.max(...corners.map(c => c.x));
+  const minY = Math.min(...corners.map(c => c.y));
+  const maxY = Math.max(...corners.map(c => c.y));
+  
+  return {
+    x: minX,
+    y: minY, 
+    width: maxX - minX,
+    height: maxY - minY
+  };
+}
+
+/**
+ * Calculate new bounding box for spatial edge-fixed resize
+ * @param originalBoundingBox - Current axis-aligned bounding box
+ * @param frameRotation - Frame rotation in degrees
+ * @param resizeEdge - Which edge is being resized
+ * @param mouseDelta - Mouse movement delta in display coordinates
+ * @param scaleFactors - Scale factors for coordinate conversion
+ * @param minWidth - Minimum allowed width
+ * @param minHeight - Minimum allowed height
+ * @returns New axis-aligned bounding box
+ */
+export function calculateSpatialEdgeFixedResize(
+  originalBoundingBox: BoundingBox,
+  frameRotation: number,
+  resizeEdge: 'top' | 'right' | 'bottom' | 'left',
+  mouseDelta: Point,
+  scaleFactors: ScaleFactors,
+  minWidth: number = 20,
+  minHeight: number = 20
+): BoundingBox {
+  // Step 1: Convert mouse delta to image coordinates
+  const imageDelta = {
+    x: mouseDelta.x / scaleFactors.scaleX,
+    y: mouseDelta.y / scaleFactors.scaleY
+  };
+  
+  // Step 2: Transform to frame local coordinates  
+  const localDelta = transformMouseDeltaToFrameLocal(imageDelta, frameRotation);
+  
+  // Step 3: Calculate new frame dimensions
+  const newDimensions = calculateNewFrameDimensions(
+    originalBoundingBox.width,
+    originalBoundingBox.height,
+    resizeEdge,
+    localDelta,
+    minWidth,
+    minHeight
+  );
+  
+  // Step 4: Get current rotated corners
+  const currentCenter = {
+    x: originalBoundingBox.x + originalBoundingBox.width / 2,
+    y: originalBoundingBox.y + originalBoundingBox.height / 2
+  };
+  const rotatedCorners = calculateRotatedCorners(
+    currentCenter, 
+    originalBoundingBox.width,
+    originalBoundingBox.height, 
+    frameRotation
+  );
+  
+  // Step 5: Identify fixed edge and its center
+  const oppositeEdge = getOppositeEdge(resizeEdge);
+  const fixedEdgeCenter = getFixedEdgeCenter(rotatedCorners, oppositeEdge);
+  
+  // Step 6: Calculate new frame center
+  const newFrameCenter = calculateNewFrameCenter(
+    fixedEdgeCenter,
+    newDimensions.width,
+    newDimensions.height, 
+    frameRotation,
+    resizeEdge
+  );
+  
+  // Step 7: Calculate new axis-aligned bounding box
+  const newBoundingBox = calculateAxisAlignedBoundingBox(
+    newFrameCenter,
+    newDimensions.width,
+    newDimensions.height,
+    frameRotation
+  );
+  
+  return newBoundingBox;
 } 
