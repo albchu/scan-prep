@@ -7,58 +7,71 @@
 
 .resizeHandle {
   position: absolute;
-  width: 12px;
-  height: 12px;
   background-color: #3b82f6;
   border: 2px solid white;
-  border-radius: 50%;
   pointer-events: auto;
   z-index: 10;
-  transform: translate(-50%, -50%);
 }
 
 .resizeHandle:hover {
   background-color: #2563eb;
-  transform: translate(-50%, -50%) scale(1.2);
+  transform: scale(1.1);
 }
 
-.resizeHandleTopLeft {
-  top: 0;
-  left: 0;
-  cursor: nw-resize;
+.resizeHandleTop {
+  top: -4px;
+  left: 50%;
+  width: 40px;
+  height: 8px;
+  transform: translateX(-50%);
+  cursor: n-resize;
+  border-radius: 4px;
 }
 
-.resizeHandleTopRight {
-  top: 0;
-  right: 0;
-  cursor: ne-resize;
-  transform: translate(50%, -50%);
+.resizeHandleRight {
+  right: -4px;
+  top: 50%;
+  width: 8px;
+  height: 40px;
+  transform: translateY(-50%);
+  cursor: e-resize;
+  border-radius: 4px;
 }
 
-.resizeHandleTopRight:hover {
-  transform: translate(50%, -50%) scale(1.2);
+.resizeHandleBottom {
+  bottom: -4px;
+  left: 50%;
+  width: 40px;
+  height: 8px;
+  transform: translateX(-50%);
+  cursor: s-resize;
+  border-radius: 4px;
 }
 
-.resizeHandleBottomLeft {
-  bottom: 0;
-  left: 0;
-  cursor: sw-resize;
-  transform: translate(-50%, 50%);
+.resizeHandleLeft {
+  left: -4px;
+  top: 50%;
+  width: 8px;
+  height: 40px;
+  transform: translateY(-50%);
+  cursor: w-resize;
+  border-radius: 4px;
 }
 
-.resizeHandleBottomLeft:hover {
-  transform: translate(-50%, 50%) scale(1.2);
+.resizeHandleTop:hover {
+  transform: translateX(-50%) scale(1.1);
 }
 
-.resizeHandleBottomRight {
-  bottom: 0;
-  right: 0;
-  cursor: se-resize;
-  transform: translate(50%, 50%);
+.resizeHandleRight:hover {
+  transform: translateY(-50%) scale(1.1);
 }
 
-.resizeHandleBottomRight:hover {
-  transform: translate(50%, 50%) scale(1.2);
+.resizeHandleBottom:hover {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.resizeHandleLeft:hover {
+  transform: translateY(-50%) scale(1.1);
 }
 
  

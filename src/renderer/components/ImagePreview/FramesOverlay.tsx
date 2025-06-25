@@ -26,7 +26,7 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
   onRotationChange,
   imageRef,
 }) => {
-  const { addViewportPreview, removeViewportPreview, imageData, imagePath } = useImageStore();
+  const { addViewportPreview, removeViewportPreview, imageData, imagePath, updateViewportFrameBoundingBox, updateViewportPreview } = useImageStore();
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Calculate scale factors
@@ -61,10 +61,12 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
 
   const handleResize = useCallback((
     event: React.MouseEvent,
-    viewportFrame: ViewportFrame
+    viewportFrame: ViewportFrame,
+    edge: 'top' | 'right' | 'bottom' | 'left'
   ) => {
-    console.log("handleResize called for frame:", viewportFrame.id);
-    // TODO: Implement resize functionality
+    console.log("handleResize called for frame:", viewportFrame.id, "edge:", edge);
+    // TODO: Implement resize functionality using useResizeDrag hook
+    // This will be implemented in Phase 2
   }, []);
 
   const handleLeftClick = useCallback(

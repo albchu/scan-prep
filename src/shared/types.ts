@@ -68,6 +68,8 @@ export interface ViewportFrame {
   id: string;
   boundingBox: BoundingBox; // Axis-aligned bounding box from detection
   rotation: number; // User-applied rotation in degrees (0 by default)
+  
+  // TODO: This can change with a resize. Does it still make sense to store it?
   area: number; // pixel area
 }
 

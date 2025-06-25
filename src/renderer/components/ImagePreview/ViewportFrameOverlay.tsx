@@ -15,7 +15,7 @@ interface ViewportFrameOverlayProps {
     event: React.MouseEvent,
     viewportFrame: ViewportFrame
   ) => void;
-  handleResize: (event: React.MouseEvent, viewportFrame: ViewportFrame) => void;
+  handleResize: (event: React.MouseEvent, viewportFrame: ViewportFrame, edge: 'top' | 'right' | 'bottom' | 'left') => void;
 }
 
 export const ViewportFrameOverlay: React.FC<ViewportFrameOverlayProps> = ({
@@ -55,39 +55,39 @@ export const ViewportFrameOverlay: React.FC<ViewportFrameOverlayProps> = ({
       }}
       onMouseDown={(event) => handleRotate(event, viewportFrame)}
     >
-      {/* Top-left corner resize handle */}
+      {/* Top edge handle */}
       <div
-        className={`${styles.resizeHandle} ${styles.resizeHandleTopLeft}`}
+        className={`${styles.resizeHandle} ${styles.resizeHandleTop}`}
         onMouseDown={(event) => {
           event.stopPropagation();
-          handleResize(event, viewportFrame);
+          handleResize(event, viewportFrame, 'top');
         }}
       />
 
-      {/* Top-right corner resize handle */}
+      {/* Right edge handle */}
       <div
-        className={`${styles.resizeHandle} ${styles.resizeHandleTopRight}`}
+        className={`${styles.resizeHandle} ${styles.resizeHandleRight}`}
         onMouseDown={(event) => {
           event.stopPropagation();
-          handleResize(event, viewportFrame);
+          handleResize(event, viewportFrame, 'right');
         }}
       />
 
-      {/* Bottom-left corner resize handle */}
+      {/* Bottom edge handle */}
       <div
-        className={`${styles.resizeHandle} ${styles.resizeHandleBottomLeft}`}
+        className={`${styles.resizeHandle} ${styles.resizeHandleBottom}`}
         onMouseDown={(event) => {
           event.stopPropagation();
-          handleResize(event, viewportFrame);
+          handleResize(event, viewportFrame, 'bottom');
         }}
       />
 
-      {/* Bottom-right corner resize handle */}
+      {/* Left edge handle */}
       <div
-        className={`${styles.resizeHandle} ${styles.resizeHandleBottomRight}`}
+        className={`${styles.resizeHandle} ${styles.resizeHandleLeft}`}
         onMouseDown={(event) => {
           event.stopPropagation();
-          handleResize(event, viewportFrame);
+          handleResize(event, viewportFrame, 'left');
         }}
       />
 

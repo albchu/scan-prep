@@ -8,6 +8,7 @@ import React, {
 import {
   ImageState,
   ViewportFrameResult,
+  BoundingBox,
 } from "@shared/types";
 import { loadImageIpc, generateViewportPreviewIpc } from "../services/ipc-requests";
 import { useDebouncedCallback } from 'use-debounce';
@@ -25,6 +26,7 @@ interface ImageStoreContextType extends ImageState {
   loadImage: (imagePath: string) => Promise<void>;
   clearImage: () => void;
   updateViewportFrameRotation: (frameId: string, rotation: number) => void;
+  updateViewportFrameBoundingBox: (frameId: string, newBoundingBox: BoundingBox) => void;
   updateViewportPreview: (frameId: string, imagePath: string) => void;
   addViewportPreview: (viewportPreview: ViewportFrameResult) => void;
   clearViewportPreviews: () => void;
@@ -164,6 +166,20 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
     []
   );
 
+  const updateViewportFrameBoundingBox = useCallback(
+    (frameId: string, newBoundingBox: BoundingBox) => {
+      setState((prev) => ({
+        ...prev,
+        viewportPreviews: prev.viewportPreviews.map((viewportPreview) =>
+          viewportPreview.viewportFrame?.id === frameId
+            ? { ...viewportPreview, viewportFrame: { ...viewportPreview.viewportFrame, boundingBox: newBoundingBox } }
+            : viewportPreview
+        ),
+      }));
+    },
+    []
+  );
+
   const contextValue: ImageStoreContextType = {
     ...state,
     addViewportPreview,
@@ -172,6 +188,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
     loadImage,
     removeViewportPreview,
     updateViewportFrameRotation,
+    updateViewportFrameBoundingBox,
     updateViewportPreview,
   };
 
