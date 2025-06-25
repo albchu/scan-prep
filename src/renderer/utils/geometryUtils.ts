@@ -271,4 +271,71 @@ export function validateBoundingBox(
   }
   
   return validated;
+}
+
+// ===== PHASE 1: CORE GEOMETRY UTILITIES FOR SPATIAL EDGE-FIXED RESIZE =====
+
+/**
+ * Transform a point by rotating it around origin by given angle
+ * @param point - The point to rotate (x, y coordinates)
+ * @param angleInDegrees - Rotation angle in degrees (positive = clockwise in +y downward systems)
+ * @returns The rotated point
+ */
+export function rotatePoint(point: Point, angleInDegrees: number): Point {
+  const angleRad = (angleInDegrees * Math.PI) / 180;
+  const cos = Math.cos(angleRad);
+  const sin = Math.sin(angleRad);
+  
+  return {
+    x: point.x * cos - point.y * sin,
+    y: point.x * sin + point.y * cos,
+  };
+}
+
+/**
+ * Apply inverse rotation to transform mouse delta to frame's local coordinate system
+ * @param mouseDelta - Mouse movement delta in global coordinates
+ * @param frameRotation - Frame's rotation in degrees
+ * @returns Mouse delta transformed to frame's local coordinate system
+ */
+export function transformMouseDeltaToFrameLocal(
+  mouseDelta: Point, 
+  frameRotation: number
+): Point {
+  const angleRad = (-frameRotation * Math.PI) / 180; // Inverse rotation
+  return {
+    x: mouseDelta.x * Math.cos(angleRad) - mouseDelta.y * Math.sin(angleRad),
+    y: mouseDelta.x * Math.sin(angleRad) + mouseDelta.y * Math.cos(angleRad)
+  };
+}
+
+/**
+ * Calculate the four corner points of a rotated frame
+ * @param frameCenter - Center point of the frame
+ * @param frameWidth - Unrotated width of the frame
+ * @param frameHeight - Unrotated height of the frame
+ * @param frameRotation - Rotation angle in degrees
+ * @returns Array of corner points [topLeft, topRight, bottomRight, bottomLeft]
+ */
+export function calculateRotatedCorners(
+  frameCenter: Point,
+  frameWidth: number,
+  frameHeight: number,
+  frameRotation: number
+): Point[] {
+  const halfWidth = frameWidth / 2;
+  const halfHeight = frameHeight / 2;
+  const angleRad = (frameRotation * Math.PI) / 180;
+  
+  const localCorners = [
+    {x: -halfWidth, y: -halfHeight}, // topLeft
+    {x: halfWidth, y: -halfHeight},  // topRight
+    {x: halfWidth, y: halfHeight},   // bottomRight  
+    {x: -halfWidth, y: halfHeight}   // bottomLeft
+  ];
+  
+  return localCorners.map(corner => ({
+    x: frameCenter.x + corner.x * Math.cos(angleRad) - corner.y * Math.sin(angleRad),
+    y: frameCenter.y + corner.x * Math.sin(angleRad) + corner.y * Math.cos(angleRad)
+  }));
 } 
