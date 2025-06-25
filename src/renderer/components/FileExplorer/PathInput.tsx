@@ -141,6 +141,15 @@ export const PathInput: React.FC<PathInputProps> = ({
       validatePath(inputValue);
     }
     
+    // Handle Cmd+A (Mac) and Ctrl+A (Windows/Linux) to select all text
+    if ((e.metaKey && e.key === 'a') || (e.ctrlKey && e.key === 'a')) {
+      e.preventDefault();
+      if (inputRef.current) {
+        inputRef.current.select();
+      }
+      return;
+    }
+    
     // Handle Cmd+V (Mac) and Ctrl+V (Windows/Linux) manually
     if ((e.metaKey && e.key === 'v') || (e.ctrlKey && e.key === 'v')) {
       e.preventDefault(); // Prevent default to handle it ourselves
