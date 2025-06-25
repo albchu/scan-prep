@@ -47,6 +47,15 @@ export class ImageAnalysisService {
         analysisOptions
       );
 
+      // Check if the detected area meets the minimum threshold
+      if (viewportFrame.area < analysisOptions.minAreaThreshold) {
+        console.log(`Detected area (${viewportFrame.area}px) is below minimum threshold (${analysisOptions.minAreaThreshold}px)`);
+        return {
+          success: false,
+          error: `Detected region is too small (${viewportFrame.area}px). Minimum area required: ${analysisOptions.minAreaThreshold}px`,
+        };
+      }
+
       const base64 = await this.generateViewportPreviewInternal(
         image,
         viewportFrame,
