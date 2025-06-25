@@ -338,4 +338,82 @@ export function calculateRotatedCorners(
     x: frameCenter.x + corner.x * Math.cos(angleRad) - corner.y * Math.sin(angleRad),
     y: frameCenter.y + corner.x * Math.sin(angleRad) + corner.y * Math.cos(angleRad)
   }));
+}
+
+// ===== PHASE 2: FRAME ANALYSIS FUNCTIONS FOR SPATIAL EDGE-FIXED RESIZE =====
+
+/**
+ * Get the center point of a specific edge of a rotated frame
+ * @param rotatedCorners - The four corner points of the rotated frame
+ * @param edge - Which edge to get the center of
+ * @returns Center point of the specified edge
+ */
+export function getFixedEdgeCenter(
+  rotatedCorners: Point[],
+  edge: 'top' | 'right' | 'bottom' | 'left'
+): Point {
+  const edgeCornerMap = {
+    'top': [rotatedCorners[0], rotatedCorners[1]], // topLeft, topRight
+    'right': [rotatedCorners[1], rotatedCorners[2]], // topRight, bottomRight  
+    'bottom': [rotatedCorners[2], rotatedCorners[3]], // bottomRight, bottomLeft
+    'left': [rotatedCorners[3], rotatedCorners[0]] // bottomLeft, topLeft
+  };
+  
+  const [p1, p2] = edgeCornerMap[edge];
+  return {
+    x: (p1.x + p2.x) / 2,
+    y: (p1.y + p2.y) / 2  
+  };
+}
+
+/**
+ * Determine which logical edge should be resized based on drag direction
+ * @param rotation - Frame rotation in degrees
+ * @param dragDirection - Normalized drag direction vector
+ * @returns The logical edge that best matches the drag direction
+ */
+export function getResizeEdgeMapping(
+  rotation: number, 
+  dragDirection: Point
+): 'top' | 'right' | 'bottom' | 'left' {
+  // Normalize rotation to 0-360 range
+  const normalizedRotation = ((rotation % 360) + 360) % 360;
+  
+  // Calculate edge normals (outward pointing)
+  const angleRad = (normalizedRotation * Math.PI) / 180;
+  const edgeNormals = {
+    top: { x: -Math.sin(angleRad), y: -Math.cos(angleRad) },
+    right: { x: Math.cos(angleRad), y: -Math.sin(angleRad) },
+    bottom: { x: Math.sin(angleRad), y: Math.cos(angleRad) },
+    left: { x: -Math.cos(angleRad), y: Math.sin(angleRad) }
+  };
+  
+  // Find edge normal most aligned with drag direction
+  let bestEdge: 'top' | 'right' | 'bottom' | 'left' = 'top';
+  let bestDot = -Infinity;
+  
+  for (const [edge, normal] of Object.entries(edgeNormals)) {
+    const dot = dragDirection.x * normal.x + dragDirection.y * normal.y;
+    if (dot > bestDot) {
+      bestDot = dot;
+      bestEdge = edge as 'top' | 'right' | 'bottom' | 'left';
+    }
+  }
+  
+  return bestEdge;
+}
+
+/**
+ * Get the opposite edge for a given edge
+ * @param edge - The edge to get the opposite of
+ * @returns The opposite edge
+ */
+export function getOppositeEdge(edge: 'top' | 'right' | 'bottom' | 'left'): 'top' | 'right' | 'bottom' | 'left' {
+  const opposites = {
+    'top': 'bottom' as const,
+    'right': 'left' as const,
+    'bottom': 'top' as const,
+    'left': 'right' as const
+  };
+  return opposites[edge];
 } 
