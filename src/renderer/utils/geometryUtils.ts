@@ -1,4 +1,4 @@
-import { ViewportFrame } from '@shared/types';
+import { ViewportFrame, BoundingBox } from '@shared/types';
 
 export interface Point {
   x: number;
@@ -182,4 +182,93 @@ export function createPolygonPath(points: Point[]): string {
   ];
   
   return pathCommands.join(' ');
+}
+
+/**
+ * Calculate new bounding box based on edge resize
+ */
+export function calculateResizedBoundingBox(
+  originalBox: BoundingBox,
+  edge: 'top' | 'right' | 'bottom' | 'left',
+  mouseDelta: Point,
+  scaleFactors: ScaleFactors,
+  minWidth: number = 20,
+  minHeight: number = 20
+): BoundingBox {
+  const newBox = { ...originalBox };
+  
+  // Convert mouse delta from display coordinates to image coordinates
+  const imageDeltaX = mouseDelta.x / scaleFactors.scaleX;
+  const imageDeltaY = mouseDelta.y / scaleFactors.scaleY;
+  
+  switch (edge) {
+    case 'top':
+      newBox.y += imageDeltaY;
+      newBox.height -= imageDeltaY;
+      // Enforce minimum height
+      if (newBox.height < minHeight) {
+        newBox.y = originalBox.y + originalBox.height - minHeight;
+        newBox.height = minHeight;
+      }
+      break;
+      
+    case 'right':
+      newBox.width += imageDeltaX;
+      // Enforce minimum width
+      if (newBox.width < minWidth) {
+        newBox.width = minWidth;
+      }
+      break;
+      
+    case 'bottom':
+      newBox.height += imageDeltaY;
+      // Enforce minimum height
+      if (newBox.height < minHeight) {
+        newBox.height = minHeight;
+      }
+      break;
+      
+    case 'left':
+      newBox.x += imageDeltaX;
+      newBox.width -= imageDeltaX;
+      // Enforce minimum width
+      if (newBox.width < minWidth) {
+        newBox.x = originalBox.x + originalBox.width - minWidth;
+        newBox.width = minWidth;
+      }
+      break;
+  }
+  
+  return newBox;
+}
+
+/**
+ * Validate bounding box constraints
+ */
+export function validateBoundingBox(
+  boundingBox: BoundingBox,
+  imageWidth: number,
+  imageHeight: number,
+  minWidth: number = 20,
+  minHeight: number = 20
+): BoundingBox {
+  const validated = { ...boundingBox };
+  
+  // Ensure minimum dimensions
+  validated.width = Math.max(validated.width, minWidth);
+  validated.height = Math.max(validated.height, minHeight);
+  
+  // Ensure within image boundaries
+  validated.x = Math.max(0, Math.min(validated.x, imageWidth - validated.width));
+  validated.y = Math.max(0, Math.min(validated.y, imageHeight - validated.height));
+  
+  // Ensure doesn't exceed image boundaries
+  if (validated.x + validated.width > imageWidth) {
+    validated.width = imageWidth - validated.x;
+  }
+  if (validated.y + validated.height > imageHeight) {
+    validated.height = imageHeight - validated.y;
+  }
+  
+  return validated;
 } 

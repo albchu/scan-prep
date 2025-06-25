@@ -1,9 +1,10 @@
 import { useImageStore } from "@/renderer/stores/imageStore";
 import { calculateImageCoordinates } from "@/renderer/utils/imageUtils";
 import { generateViewportFrameIpc } from "../../services/ipc-requests";
-import { ViewportFrame } from "@shared/types";
+import { ViewportFrame, BoundingBox } from "@shared/types";
 import React, { useCallback, useRef } from "react";
 import { useRotationDrag } from "../../hooks/useRotationDrag";
+import { useResizeDrag } from "../../hooks/useResizeDrag";
 import { calculateScaleFactors } from "../../utils/geometryUtils";
 import { ViewportFrameOverlay } from "./ViewportFrameOverlay";
 
@@ -44,6 +45,20 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
     onRotationChange,
   });
 
+  // Use resize drag hook
+  const { handleResizeStart } = useResizeDrag({
+    viewportFrames,
+    scaleFactors,
+    imageWidth,
+    imageHeight,
+    onResizeChange: (frameId: string, newBoundingBox: BoundingBox) => {
+      updateViewportFrameBoundingBox(frameId, newBoundingBox);
+      if (imagePath) {
+        updateViewportPreview(frameId, imagePath);
+      }
+    },
+  });
+
   const handleRotate = useCallback((
     event: React.MouseEvent,
     viewportFrame: ViewportFrame
@@ -64,10 +79,8 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
     viewportFrame: ViewportFrame,
     edge: 'top' | 'right' | 'bottom' | 'left'
   ) => {
-    console.log("handleResize called for frame:", viewportFrame.id, "edge:", edge);
-    // TODO: Implement resize functionality using useResizeDrag hook
-    // This will be implemented in Phase 2
-  }, []);
+    handleResizeStart(event, viewportFrame, edge, overlayRef.current);
+  }, [handleResizeStart]);
 
   const handleLeftClick = useCallback(
     async (event: React.MouseEvent<Element, MouseEvent>) => {

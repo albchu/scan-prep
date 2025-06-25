@@ -38,7 +38,6 @@ export function useRotationDrag({
    * Handle global mouse events
    */
   useEffect(() => {
-    // Define event handlers
     function handleGlobalMouseMove(event: MouseEvent) {
       const currentDragState = dragStateRef.current;
       if (!currentDragState) return;
@@ -64,7 +63,7 @@ export function useRotationDrag({
       setDragState(null);
     }
     
-    // Add document-level event listeners
+    // Add document-level event listeners when dragging
     if (dragStateRef.current) {
       document.addEventListener('mousemove', handleGlobalMouseMove);
       document.addEventListener('mouseup', handleGlobalMouseUp);
@@ -75,7 +74,7 @@ export function useRotationDrag({
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [viewportFrames, scaleFactors, onRotationChange]); // Note we don't need dragState here as we use the ref
+  }, [viewportFrames, scaleFactors, onRotationChange]);
 
   /**
    * Handle rotation drag start
@@ -105,22 +104,8 @@ export function useRotationDrag({
     });
   }, [scaleFactors]);
 
-  /**
-   * These functions are kept for API compatibility but functionality moved to document-level listeners
-   */
-  const handleRotationDrag = useCallback((_event: React.MouseEvent, _element: HTMLElement | null) => {
-    // Local drag handling is no longer needed since we use document-level mousemove
-  }, []);
-
-  const handleRotationEnd = useCallback(() => {
-    // This is handled by document-level mouseup event listener
-    setDragState(null);
-  }, []);
-
   return {
-    dragState,
     handleRotationStart,
-    handleRotationDrag,
-    handleRotationEnd,
+    isDragging: dragState !== null,
   };
 } 
