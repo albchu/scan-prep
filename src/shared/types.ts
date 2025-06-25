@@ -53,7 +53,7 @@ export interface ImageState {
   loaded: boolean;
   error: string | null;
   imageData: ImageLoadResult['data'] | null;
-  selectedPath: string | null;
+  imagePath: string | null;
   viewportPreviews: ViewportFrameResult[];
 }
 

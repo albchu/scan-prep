@@ -76,7 +76,7 @@ The image store (`src/renderer/stores/imageStore.ts`) manages the image state in
 ```typescript
 const loadImage = async (imagePath: string) => {
   // Set loading state
-  setState({ loading: true, selectedPath: imagePath });
+  setState({ loading: true, imagePath });
   
   // Call IPC to load image
   const result = await window.electronAPI.invoke(
@@ -99,7 +99,7 @@ const loadImage = async (imagePath: string) => {
 - `loaded`: Indicates successful load
 - `error`: Contains error message if load failed
 - `imageData`: Contains the image data and metadata
-- `selectedPath`: Currently selected image path
+- `imagePath`: Currently selected image path
 
 ### 4. UI Components
 

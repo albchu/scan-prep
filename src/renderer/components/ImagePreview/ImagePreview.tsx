@@ -9,15 +9,15 @@ interface ImagePreviewProps {
 }
 
 export const ImagePreview: React.FC<ImagePreviewProps> = ({ selectedImage }) => {
-  const { loading, loaded, error, imageData, selectedPath, loadImage, clearImage } = useImageStore();
+  const { loading, loaded, error, imageData, imagePath, loadImage, clearImage } = useImageStore();
 
   useEffect(() => {
-    if (selectedImage && selectedImage !== selectedPath) {
+    if (selectedImage && selectedImage !== imagePath) {
       loadImage(selectedImage);
-    } else if (!selectedImage && selectedPath) {
+    } else if (!selectedImage && imagePath) {
       clearImage();
     }
-  }, [selectedImage, selectedPath, loadImage, clearImage]);
+  }, [selectedImage, imagePath, loadImage, clearImage]);
 
   // Error state
   if (error) {

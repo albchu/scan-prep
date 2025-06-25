@@ -1,14 +1,12 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
-import { ImageLoadResult, ViewportFrameResult } from "@shared/types";
-import { IPC_CHANNELS } from "@shared/constants";
-import { FramesOverlay } from "./FramesOverlay";
+import { ImageLoadResult } from "@shared/types";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useImageStore } from "../../stores/imageStore";
 import {
-  formatFileSize,
-  calculateImageCoordinates,
   calculateDisplayScale,
+  formatFileSize,
   getImageRenderingStyle,
 } from "../../utils/imageUtils";
+import { FramesOverlay } from "./FramesOverlay";
 
 interface ImageBoardProps {
   imagePath: string;
@@ -30,12 +28,10 @@ export const ImageBoard: React.FC<ImageBoardProps> = ({
     height: 0,
   });
   const [displayScale, setDisplayScale] = useState<number | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const {
     clearViewportPreviews,
     viewportPreviews,
-    addViewportPreview,
     updateViewportFrameRotation,
     updateViewportPreview,
   } = useImageStore();
@@ -102,67 +98,6 @@ export const ImageBoard: React.FC<ImageBoardProps> = ({
     [updateViewportFrameRotation, updateViewportPreview, imagePath]
   );
 
-  const handleImageClick = useCallback(
-    async (event: React.MouseEvent<Element, MouseEvent>) => {
-      const target = event.target as HTMLElement;
-      const elementType = target.getAttribute("data-element-type");
-
-      // When clicking a viewport frame, the user does not want to create another frame
-      if (
-        elementType === "viewport-frame" ||
-        !imageRef.current ||
-        !imageData ||
-        isAnalyzing
-      )
-        return;
-
-      // Get click coordinates relative to the image
-      const rect = imageRef.current.getBoundingClientRect();
-      const clickX = event.clientX - rect.left;
-      const clickY = event.clientY - rect.top;
-
-      // Calculate the actual image coordinates
-      const imageCoords = calculateImageCoordinates(
-        clickX,
-        clickY,
-        rect,
-        imageData.width,
-        imageData.height
-      );
-
-      console.log("Image clicked at:", {
-        displayCoords: { x: clickX, y: clickY },
-        actualCoords: imageCoords,
-        imageSize: { width: imageData.width, height: imageData.height },
-        displaySize: { width: rect.width, height: rect.height },
-      });
-
-      setIsAnalyzing(true);
-
-      try {
-        const result = (await window.electronAPI.invoke(
-          IPC_CHANNELS.GENERATE_VIEWPORT_FRAME,
-          imagePath,
-          imageCoords.x,
-          imageCoords.y
-        )) as ViewportFrameResult;
-
-        if (result.success) {
-          addViewportPreview(result);
-        } else {
-          console.error("Click analysis failed:", result.error);
-          // TODO: Show error message to user
-        }
-      } catch (error) {
-        console.error("Error during click analysis:", error);
-        // TODO: Show error message to user
-      } finally {
-        setIsAnalyzing(false);
-      }
-    },
-    [imagePath, imageData, isAnalyzing, addViewportPreview]
-  );
-
   if (!imageData) {
     return null;
   }
@@ -197,7 +132,7 @@ export const ImageBoard: React.FC<ImageBoardProps> = ({
             displayWidth={displayDimensions.width}
             displayHeight={displayDimensions.height}
             onRotationChange={handleRotationChange}
-            handleImageClick={handleImageClick}
+            imageRef={imageRef}
           />
         </div>
       </div>
@@ -246,7 +181,6 @@ export const ImageBoard: React.FC<ImageBoardProps> = ({
             <button
               onClick={clearViewportPreviews}
               className="w-full px-3 py-2 text-sm bg-dark-700 hover:bg-dark-600 text-dark-200 rounded-lg transition-colors"
-              disabled={isAnalyzing}
             >
               Clear Viewport Frames ({viewportPreviews.length})
             </button>

@@ -18,7 +18,7 @@ const initialState: ImageState = {
   loaded: false,
   error: null,
   imageData: null,
-  selectedPath: null,
+  imagePath: null,
   viewportPreviews: [], // TODO: Should be a map by viewport frame id
 };
 
@@ -50,7 +50,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
     setState({
       ...initialState,
       loading: true,
-      selectedPath: imagePath,
+      imagePath,
     });
 
     try {
@@ -66,7 +66,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
           loaded: true,
           error: null,
           imageData: result.data,
-          selectedPath: imagePath,
+          imagePath,
           viewportPreviews: [],
         });
       } else {
@@ -75,7 +75,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
           loaded: false,
           error: result.error || "Failed to load image",
           imageData: null,
-          selectedPath: imagePath,
+          imagePath,
           viewportPreviews: [],
         });
       }
@@ -85,7 +85,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
         loaded: false,
         error: error instanceof Error ? error.message : "Unknown error",
         imageData: null,
-        selectedPath: imagePath,
+        imagePath,
         viewportPreviews: [],
       });
     }
