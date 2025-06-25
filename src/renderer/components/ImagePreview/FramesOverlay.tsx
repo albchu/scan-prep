@@ -28,7 +28,7 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
   onRotationChange,
   imageRef,
 }) => {
-  const { addViewportPreview, imageData, imagePath } = useImageStore();
+  const { addViewportPreview, removeViewportPreview, imageData, imagePath } = useImageStore();
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Calculate scale factors
@@ -53,7 +53,7 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
     handleRotationStart(event, viewportFrame, overlayRef.current);
   };
 
-  const handleImageClick = useCallback(
+  const handleLeftClick = useCallback(
     async (event: React.MouseEvent<Element, MouseEvent>) => {
       const target = event.target as HTMLElement;
       const elementType = target.getAttribute("data-element-type");
@@ -104,12 +104,44 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
     [imagePath, imageData, addViewportPreview, imageRef]
   );
 
+  const handleRightClick = useCallback(
+    (event: React.MouseEvent<Element, MouseEvent>) => {
+      event.preventDefault(); // Prevent context menu
+      
+      const target = event.target as HTMLElement;
+      const elementType = target.getAttribute("data-element-type");
+
+      // Only handle right clicks on viewport frames
+      if (elementType === "viewport-frame") {
+        const frameId = target.getAttribute("data-frame-id");
+        if (frameId) {
+          removeViewportPreview(frameId);
+        }
+      }
+    },
+    [removeViewportPreview]
+  );
+
+  const handleImageClick = useCallback(
+    (event: React.MouseEvent<Element, MouseEvent>) => {
+      if (event.button === 0) {
+        // Left click
+        handleLeftClick(event);
+      } else if (event.button === 2) {
+        // Right click
+        handleRightClick(event);
+      }
+    },
+    [handleLeftClick, handleRightClick]
+  );
+
   return (
     <div
       ref={overlayRef}
       className="absolute inset-0 cursor-crosshair"
       style={{ width: displayWidth, height: displayHeight }}
-      onClick={handleImageClick}
+      onMouseDown={handleImageClick}
+      onContextMenu={handleRightClick}
       data-element-type="overlay-background"
     >
       {viewportFrames.map((viewportFrame) => {
