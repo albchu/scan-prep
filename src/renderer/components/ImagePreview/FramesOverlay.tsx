@@ -4,10 +4,8 @@ import { generateViewportFrameIpc } from "../../services/ipc-requests";
 import { ViewportFrame } from "@shared/types";
 import React, { useCallback, useRef } from "react";
 import { useRotationDrag } from "../../hooks/useRotationDrag";
-import {
-  calculateScaleFactors,
-  getBoundingBoxCenter,
-} from "../../utils/geometryUtils";
+import { calculateScaleFactors } from "../../utils/geometryUtils";
+import { ViewportFrameOverlay } from "./ViewportFrameOverlay";
 
 interface InteractiveViewportFrameOverlayProps {
   viewportFrames: ViewportFrame[];
@@ -46,12 +44,28 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
     onRotationChange,
   });
 
-  const onDivMouseDown = (
+  const handleRotate = useCallback((
     event: React.MouseEvent,
     viewportFrame: ViewportFrame
   ) => {
     handleRotationStart(event, viewportFrame, overlayRef.current);
-  };
+  }, [handleRotationStart]);
+
+  const handleTranslate = useCallback((
+    event: React.MouseEvent,
+    viewportFrame: ViewportFrame
+  ) => {
+    console.log("handleTranslate called for frame:", viewportFrame.id);
+    // TODO: Implement translation functionality
+  }, []);
+
+  const handleResize = useCallback((
+    event: React.MouseEvent,
+    viewportFrame: ViewportFrame
+  ) => {
+    console.log("handleResize called for frame:", viewportFrame.id);
+    // TODO: Implement resize functionality
+  }, []);
 
   const handleLeftClick = useCallback(
     async (event: React.MouseEvent<Element, MouseEvent>) => {
@@ -144,39 +158,16 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
       onContextMenu={handleRightClick}
       data-element-type="overlay-background"
     >
-      {viewportFrames.map((viewportFrame) => {
-        const { x, y, width, height } = viewportFrame.boundingBox;
-        const center = getBoundingBoxCenter(
-          viewportFrame.boundingBox,
-          scaleFactors
-        );
-
-        // Scale the position and size to match the display size
-        const scaledX = x * scaleFactors.scaleX;
-        const scaledY = y * scaleFactors.scaleY;
-        const scaledWidth = width * scaleFactors.scaleX;
-        const scaledHeight = height * scaleFactors.scaleY;
-
-        return (
-          <div
-            key={viewportFrame.id}
-            data-element-type="viewport-frame"
-            data-frame-id={viewportFrame.id}
-            className="absolute border-2 border-blue-500 cursor-move pointer-events-auto"
-            style={{
-              left: `${scaledX}px`,
-              top: `${scaledY}px`,
-              width: `${scaledWidth}px`,
-              height: `${scaledHeight}px`,
-              transform: `rotate(${viewportFrame.rotation}deg)`,
-              transformOrigin: `${center.x - scaledX}px ${
-                center.y - scaledY
-              }px`,
-            }}
-            onMouseDown={(event) => onDivMouseDown(event, viewportFrame)}
-          />
-        );
-      })}
+      {viewportFrames.map((viewportFrame) => (
+        <ViewportFrameOverlay
+          key={viewportFrame.id}
+          viewportFrame={viewportFrame}
+          scaleFactors={scaleFactors}
+          handleRotate={handleRotate}
+          handleTranslate={handleTranslate}
+          handleResize={handleResize}
+        />
+      ))}
     </div>
   );
 };
