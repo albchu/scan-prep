@@ -1,6 +1,8 @@
 import React from "react";
 import { ViewportFrame } from "@shared/types";
 import { getBoundingBoxCenter } from "../../utils/geometryUtils";
+import styles from "./ViewportFrameOverlay.module.css";
+import { RotateHandle } from "./RotateHandle";
 
 interface ViewportFrameOverlayProps {
   viewportFrame: ViewportFrame;
@@ -9,7 +11,10 @@ interface ViewportFrameOverlayProps {
     scaleY: number;
   };
   handleRotate: (event: React.MouseEvent, viewportFrame: ViewportFrame) => void;
-  handleTranslate: (event: React.MouseEvent, viewportFrame: ViewportFrame) => void;
+  handleTranslate: (
+    event: React.MouseEvent,
+    viewportFrame: ViewportFrame
+  ) => void;
   handleResize: (event: React.MouseEvent, viewportFrame: ViewportFrame) => void;
 }
 
@@ -20,6 +25,11 @@ export const ViewportFrameOverlay: React.FC<ViewportFrameOverlayProps> = ({
   handleTranslate,
   handleResize,
 }) => {
+  console.log("ViewportFrameOverlay", {
+    viewportFrame,
+    handleTranslate,
+    handleResize,
+  });
   const { x, y, width, height } = viewportFrame.boundingBox;
   const center = getBoundingBoxCenter(viewportFrame.boundingBox, scaleFactors);
 
@@ -34,7 +44,7 @@ export const ViewportFrameOverlay: React.FC<ViewportFrameOverlayProps> = ({
       key={viewportFrame.id}
       data-element-type="viewport-frame"
       data-frame-id={viewportFrame.id}
-      className="absolute border-2 border-blue-500 cursor-move pointer-events-auto"
+      className={styles.container}
       style={{
         left: `${scaledX}px`,
         top: `${scaledY}px`,
@@ -44,6 +54,66 @@ export const ViewportFrameOverlay: React.FC<ViewportFrameOverlayProps> = ({
         transformOrigin: `${center.x - scaledX}px ${center.y - scaledY}px`,
       }}
       onMouseDown={(event) => handleRotate(event, viewportFrame)}
-    />
+    >
+      {/* Top-left corner resize handle */}
+      <div
+        className={`${styles.resizeHandle} ${styles.resizeHandleTopLeft}`}
+        onMouseDown={(event) => {
+          event.stopPropagation();
+          handleResize(event, viewportFrame);
+        }}
+      />
+
+      {/* Top-right corner resize handle */}
+      <div
+        className={`${styles.resizeHandle} ${styles.resizeHandleTopRight}`}
+        onMouseDown={(event) => {
+          event.stopPropagation();
+          handleResize(event, viewportFrame);
+        }}
+      />
+
+      {/* Bottom-left corner resize handle */}
+      <div
+        className={`${styles.resizeHandle} ${styles.resizeHandleBottomLeft}`}
+        onMouseDown={(event) => {
+          event.stopPropagation();
+          handleResize(event, viewportFrame);
+        }}
+      />
+
+      {/* Bottom-right corner resize handle */}
+      <div
+        className={`${styles.resizeHandle} ${styles.resizeHandleBottomRight}`}
+        onMouseDown={(event) => {
+          event.stopPropagation();
+          handleResize(event, viewportFrame);
+        }}
+      />
+
+      <RotateHandle
+        viewportFrame={viewportFrame}
+        position="topLeft"
+        handleRotate={handleRotate}
+      />
+
+      <RotateHandle
+        viewportFrame={viewportFrame}
+        position="topRight"
+        handleRotate={handleRotate}
+      />
+
+      <RotateHandle
+        viewportFrame={viewportFrame}
+        position="bottomLeft"
+        handleRotate={handleRotate}
+      />
+
+      <RotateHandle
+        viewportFrame={viewportFrame}
+        position="bottomRight"
+        handleRotate={handleRotate}
+      />
+    </div>
   );
-}; 
+};

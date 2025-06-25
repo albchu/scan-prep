@@ -1,0 +1,52 @@
+.rotateHandle {
+  position: absolute;
+  cursor: grab;
+  border-radius: 50%;
+}
+
+.rotateHandle svg {
+  width: 32px;
+  height: 32px;
+  transition: width 0.2s ease, height 0.2s ease;
+}
+
+.rotateHandle:hover svg {
+  width: 45px;
+  height: 45px;
+}
+
+.rotateHandle:hover {
+  border-color: #3b82f6;
+}
+
+.rotateHandle:active {
+  cursor: grabbing;
+}
+
+.rotateHandleIcon {
+  transition: stroke 0.2s ease;
+}
+
+.rotateHandle:hover .rotateHandleIcon {
+  stroke: #2563eb;
+}
+
+.topLeft {
+  top: -25px;
+  left: -25px;
+}
+
+.topRight {
+  top: -25px;
+  right: -25px;
+}
+
+.bottomLeft {
+  bottom: -25px;
+  left: -25px;
+}
+
+.bottomRight {
+  bottom: -25px;
+  right: -25px;
+} 

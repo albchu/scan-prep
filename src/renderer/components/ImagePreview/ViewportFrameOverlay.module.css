@@ -1,0 +1,64 @@
+.container {
+  position: absolute;
+  border: 2px solid #3b82f6;
+  cursor: move;
+  pointer-events: auto;
+}
+
+.resizeHandle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: #3b82f6;
+  border: 2px solid white;
+  border-radius: 50%;
+  pointer-events: auto;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+}
+
+.resizeHandle:hover {
+  background-color: #2563eb;
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+.resizeHandleTopLeft {
+  top: 0;
+  left: 0;
+  cursor: nw-resize;
+}
+
+.resizeHandleTopRight {
+  top: 0;
+  right: 0;
+  cursor: ne-resize;
+  transform: translate(50%, -50%);
+}
+
+.resizeHandleTopRight:hover {
+  transform: translate(50%, -50%) scale(1.2);
+}
+
+.resizeHandleBottomLeft {
+  bottom: 0;
+  left: 0;
+  cursor: sw-resize;
+  transform: translate(-50%, 50%);
+}
+
+.resizeHandleBottomLeft:hover {
+  transform: translate(-50%, 50%) scale(1.2);
+}
+
+.resizeHandleBottomRight {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+  transform: translate(50%, 50%);
+}
+
+.resizeHandleBottomRight:hover {
+  transform: translate(50%, 50%) scale(1.2);
+}
+
+ 
