@@ -1,14 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { IPC_CHANNELS } from '@shared/constants';
-
-// Type declaration for electronAPI
-declare global {
-  interface Window {
-    electronAPI: {
-      invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
-    };
-  }
-}
+import { validatePathIpc } from '../../services/ipc-requests';
 
 interface PathInputProps {
   currentPath: string;
@@ -92,7 +83,7 @@ export const PathInput: React.FC<PathInputProps> = ({
     setIsValidating(true);
     
     try {
-      const result = await window.electronAPI.invoke(IPC_CHANNELS.FILE_VALIDATE_PATH, path.trim()) as { isValid: boolean; error?: string };
+      const result = await validatePathIpc(path.trim());
       
       setValidationState({
         isValid: result.isValid,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DirectoryEntry } from '@shared/types';
-import { IPC_CHANNELS } from '@shared/constants';
+import { readDirectoryIpc } from '../../services/ipc-requests';
 import { HierarchicalFileRow, TreeNode } from './HierarchicalFileRow';
 
 interface Props {
@@ -48,10 +48,7 @@ export const HierarchicalFileList: React.FC<Props> = ({
       setLoading((prev) => new Set(prev).add(dirPath));
 
       try {
-        const entries = await window.electronAPI.invoke(
-          IPC_CHANNELS.FILE_READ_DIRECTORY,
-          dirPath
-        ) as DirectoryEntry[];
+        const entries = await readDirectoryIpc(dirPath);
         const children: TreeNode[] = entries.map((e) => ({
           ...e,
           level,

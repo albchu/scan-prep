@@ -1,7 +1,7 @@
 import { useImageStore } from "@/renderer/stores/imageStore";
 import { calculateImageCoordinates } from "@/renderer/utils/imageUtils";
-import { IPC_CHANNELS } from "@/shared/constants";
-import { ViewportFrame, ViewportFrameResult } from "@shared/types";
+import { generateViewportFrameIpc } from "../../services/ipc-requests";
+import { ViewportFrame } from "@shared/types";
 import React, { useCallback, useRef } from "react";
 import { useRotationDrag } from "../../hooks/useRotationDrag";
 import {
@@ -50,8 +50,6 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
     event: React.MouseEvent,
     viewportFrame: ViewportFrame
   ) => {
-    // Stop propagation here to prevent background click
-    event.stopPropagation();
     handleRotationStart(event, viewportFrame, overlayRef.current);
   };
 
@@ -61,7 +59,7 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
       const elementType = target.getAttribute("data-element-type");
 
       // When clicking a viewport frame, the user does not want to create another frame
-      if (elementType === "viewport-frame" || !imageRef.current || !imageData)
+      if (elementType === "viewport-frame" || !imageRef.current || !imageData || !imagePath)
         return;
 
       // Get click coordinates relative to the image
@@ -86,12 +84,11 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
       });
 
       try {
-        const result = (await window.electronAPI.invoke(
-          IPC_CHANNELS.GENERATE_VIEWPORT_FRAME,
+        const result = await generateViewportFrameIpc(
           imagePath,
           imageCoords.x,
           imageCoords.y
-        )) as ViewportFrameResult;
+        );
 
         if (result.success) {
           addViewportPreview(result);

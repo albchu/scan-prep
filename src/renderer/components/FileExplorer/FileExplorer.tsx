@@ -4,15 +4,6 @@ import { FileExplorerHeader } from './FileExplorerHeader';
 import { useApp } from '../../AppContext';
 import { FileListError, FileListNoDir } from './FileListStates';
 
-// Type declaration for electronAPI
-declare global {
-  interface Window {
-    electronAPI: {
-      invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
-    };
-  }
-}
-
 export const FileExplorer: React.FC = () => {
   const {
     currentPath,

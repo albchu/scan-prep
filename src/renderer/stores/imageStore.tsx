@@ -7,10 +7,9 @@ import React, {
 } from "react";
 import {
   ImageState,
-  ImageLoadResult,
   ViewportFrameResult,
 } from "@shared/types";
-import { IPC_CHANNELS } from "@shared/constants";
+import { loadImageIpc, generateViewportPreviewIpc } from "../services/ipc-requests";
 import { useDebouncedCallback } from 'use-debounce';
 
 const initialState: ImageState = {
@@ -55,10 +54,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
 
     try {
       // Call IPC to load image
-      const result = (await window.electronAPI.invoke(
-        IPC_CHANNELS.IMAGE_LOAD,
-        imagePath
-      )) as ImageLoadResult;
+      const result = await loadImageIpc(imagePath);
 
       if (result.success && result.data) {
         setState({
@@ -103,11 +99,7 @@ export const ImageStoreProvider: React.FC<ImageStoreProviderProps> = ({
       if (!viewportFrame) return;
 
       // TODO: This result should be made available to the corresponding viewport preview being rendered in right column
-      const result = (await window.electronAPI.invoke(
-        IPC_CHANNELS.GENERATE_VIEWPORT_PREVIEW,
-        imagePath,
-        viewportFrame
-      )) as ViewportFrameResult;
+      const result = await generateViewportPreviewIpc(imagePath, viewportFrame);
 
       console.log('Updating viewport preview for frame:', frameId, 'result:', result);
       setState((prev) => ({

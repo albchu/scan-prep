@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { DirectoryEntry } from '@shared/types';
-import { IPC_CHANNELS } from '@shared/constants';
+import { readDirectoryIpc } from './services/ipc-requests';
 
 interface AppContextType {
   // Directory and file state
@@ -41,7 +41,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, onFileSelect
 
     try {
       console.log('Loading directory:', newPath);
-      const entries = await window.electronAPI.invoke(IPC_CHANNELS.FILE_READ_DIRECTORY, newPath) as DirectoryEntry[];
+      const entries = await readDirectoryIpc(newPath);
       setDirectoryEntries(entries);
       console.log(`Loaded ${entries.length} entries`);
     } catch (error) {
