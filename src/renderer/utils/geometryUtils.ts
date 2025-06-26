@@ -15,6 +15,110 @@ export interface ScaleFactors {
   scaleY: number;
 }
 
+// ===== CORE REUSABLE UTILITIES =====
+
+/**
+ * Convert degrees to radians
+ */
+export function degreesToRadians(degrees: number): number {
+  return (degrees * Math.PI) / 180;
+}
+
+/**
+ * Convert radians to degrees
+ */
+export function radiansToDegrees(radians: number): number {
+  return radians * (180 / Math.PI);
+}
+
+/**
+ * Apply rotation transformation to a point around origin
+ * @param point - Point to transform
+ * @param angleRad - Rotation angle in radians
+ * @returns Transformed point
+ */
+export function applyRotationMatrix(point: Point, angleRad: number): Point {
+  const cos = Math.cos(angleRad);
+  const sin = Math.sin(angleRad);
+  
+  return {
+    x: point.x * cos - point.y * sin,
+    y: point.x * sin + point.y * cos,
+  };
+}
+
+/**
+ * Apply inverse rotation transformation to a point around origin
+ * @param point - Point to transform
+ * @param angleRad - Original rotation angle in radians (will be inverted)
+ * @returns Transformed point
+ */
+export function applyInverseRotationMatrix(point: Point, angleRad: number): Point {
+  return applyRotationMatrix(point, -angleRad);
+}
+
+/**
+ * Calculate center point of a rectangle
+ * @param x - Rectangle x position
+ * @param y - Rectangle y position  
+ * @param width - Rectangle width
+ * @param height - Rectangle height
+ * @returns Center point
+ */
+export function calculateRectangleCenter(x: number, y: number, width: number, height: number): Point {
+  return {
+    x: x + width / 2,
+    y: y + height / 2,
+  };
+}
+
+/**
+ * Transform point from one coordinate system to another using scale factors
+ * @param point - Point to transform
+ * @param scaleFactors - Scale transformation to apply
+ * @returns Transformed point
+ */
+export function applyScaleTransform(point: Point, scaleFactors: ScaleFactors): Point {
+  return {
+    x: point.x * scaleFactors.scaleX,
+    y: point.y * scaleFactors.scaleY,
+  };
+}
+
+/**
+ * Apply inverse scale transformation to a point
+ * @param point - Point to transform
+ * @param scaleFactors - Original scale factors (will be inverted)
+ * @returns Transformed point
+ */
+export function applyInverseScaleTransform(point: Point, scaleFactors: ScaleFactors): Point {
+  return {
+    x: point.x / scaleFactors.scaleX,
+    y: point.y / scaleFactors.scaleY,
+  };
+}
+
+/**
+ * Calculate the four corner points of an axis-aligned rectangle
+ * @param center - Center point of the rectangle
+ * @param width - Rectangle width
+ * @param height - Rectangle height
+ * @returns Array of corner points [topLeft, topRight, bottomRight, bottomLeft]
+ */
+export function calculateAxisAlignedCorners(center: Point, width: number, height: number): Point[] {
+  const halfWidth = width / 2;
+  const halfHeight = height / 2;
+  
+  return [
+    { x: center.x - halfWidth, y: center.y - halfHeight }, // topLeft
+    { x: center.x + halfWidth, y: center.y - halfHeight }, // topRight
+    { x: center.x + halfWidth, y: center.y + halfHeight }, // bottomRight
+    { x: center.x - halfWidth, y: center.y + halfHeight }, // bottomLeft
+  ];
+}
+
+// ===== EXISTING FUNCTIONS REFACTORED TO USE UTILITIES =====
+
 /**
  * Calculate scale factors for transforming image coordinates to display coordinates
  */
@@ -37,10 +141,13 @@ export function getBoundingBoxCenter(
   boundingBox: ViewportFrame['boundingBox'],
   scaleFactors: ScaleFactors
 ): Point {
-  return {
-    x: (boundingBox.x + boundingBox.width / 2) * scaleFactors.scaleX,
-    y: (boundingBox.y + boundingBox.height / 2) * scaleFactors.scaleY,
-  };
+  const center = calculateRectangleCenter(
+    boundingBox.x,
+    boundingBox.y,
+    boundingBox.width,
+    boundingBox.height
+  );
+  return applyScaleTransform(center, scaleFactors);
 }
 
 /**
@@ -52,7 +159,7 @@ export function calculateAngleBetweenPoints(
   targetX: number,
   targetY: number
 ): number {
-  return Math.atan2(targetY - centerY, targetX - centerX) * (180 / Math.PI);
+  return radiansToDegrees(Math.atan2(targetY - centerY, targetX - centerX));
 }
 
 /**
@@ -73,30 +180,22 @@ export function getRotatedRectangleCorners(
   rotation: number,
   scaleFactors: ScaleFactors
 ): Point[] {
-  const centerX = (boundingBox.x + boundingBox.width / 2) * scaleFactors.scaleX;
-  const centerY = (boundingBox.y + boundingBox.height / 2) * scaleFactors.scaleY;
-  const width = boundingBox.width * scaleFactors.scaleX;
-  const height = boundingBox.height * scaleFactors.scaleY;
+  const center = getBoundingBoxCenter(boundingBox, scaleFactors);
+  const scaledWidth = boundingBox.width * scaleFactors.scaleX;
+  const scaledHeight = boundingBox.height * scaleFactors.scaleY;
   
-  const angleRad = (rotation * Math.PI) / 180;
-  const cos = Math.cos(angleRad);
-  const sin = Math.sin(angleRad);
+  // Get axis-aligned corners relative to center
+  const localCorners = calculateAxisAlignedCorners({ x: 0, y: 0 }, scaledWidth, scaledHeight);
   
-  const halfWidth = width / 2;
-  const halfHeight = height / 2;
-  
-  // Calculate corners relative to center, then rotate
-  const corners = [
-    { x: -halfWidth, y: -halfHeight }, // Top-left
-    { x: halfWidth, y: -halfHeight },  // Top-right
-    { x: halfWidth, y: halfHeight },   // Bottom-right
-    { x: -halfWidth, y: halfHeight },  // Bottom-left
-  ].map(corner => ({
-    x: centerX + corner.x * cos - corner.y * sin,
-    y: centerY + corner.x * sin + corner.y * cos,
-  }));
-  
-  return corners;
+  // Apply rotation and translate to actual center
+  const angleRad = degreesToRadians(rotation);
+  return localCorners.map(corner => {
+    const rotated = applyRotationMatrix(corner, angleRad);
+    return {
+      x: center.x + rotated.x,
+      y: center.y + rotated.y,
+    };
+  });
 }
 
 /**
@@ -107,13 +206,13 @@ export function getAllRotationHandlePositions(
   center: Point,
   handleOffset: number = 20
 ): Point[] {
-  // The corners array has this order: [topLeft, topRight, bottomRight, bottomLeft]
   return corners.map(corner => {
     const angle = Math.atan2(corner.y - center.y, corner.x - center.x);
+    const offsetVector = applyRotationMatrix({ x: handleOffset, y: 0 }, angle);
     
     return {
-      x: corner.x + Math.cos(angle) * handleOffset,
-      y: corner.y + Math.sin(angle) * handleOffset,
+      x: corner.x + offsetVector.x,
+      y: corner.y + offsetVector.y,
     };
   });
 }
@@ -127,13 +226,12 @@ export function getRotationHandlePosition(
   handleOffset: number = 20
 ): Point {
   const topRight = corners[1]; // Top-right corner
-  
-  // Calculate angle from center to top-right corner
   const angle = Math.atan2(topRight.y - center.y, topRight.x - center.x);
+  const offsetVector = applyRotationMatrix({ x: handleOffset, y: 0 }, angle);
   
   return {
-    x: topRight.x + Math.cos(angle) * handleOffset,
-    y: topRight.y + Math.sin(angle) * handleOffset,
+    x: topRight.x + offsetVector.x,
+    y: topRight.y + offsetVector.y,
   };
 }
 
@@ -198,13 +296,12 @@ export function calculateResizedBoundingBox(
   const newBox = { ...originalBox };
   
   // Convert mouse delta from display coordinates to image coordinates
-  const imageDeltaX = mouseDelta.x / scaleFactors.scaleX;
-  const imageDeltaY = mouseDelta.y / scaleFactors.scaleY;
+  const imageDelta = applyInverseScaleTransform(mouseDelta, scaleFactors);
   
   switch (edge) {
     case 'top':
-      newBox.y += imageDeltaY;
-      newBox.height -= imageDeltaY;
+      newBox.y += imageDelta.y;
+      newBox.height -= imageDelta.y;
       // Enforce minimum height
       if (newBox.height < minHeight) {
         newBox.y = originalBox.y + originalBox.height - minHeight;
@@ -213,7 +310,7 @@ export function calculateResizedBoundingBox(
       break;
       
     case 'right':
-      newBox.width += imageDeltaX;
+      newBox.width += imageDelta.x;
       // Enforce minimum width
       if (newBox.width < minWidth) {
         newBox.width = minWidth;
@@ -221,7 +318,7 @@ export function calculateResizedBoundingBox(
       break;
       
     case 'bottom':
-      newBox.height += imageDeltaY;
+      newBox.height += imageDelta.y;
       // Enforce minimum height
       if (newBox.height < minHeight) {
         newBox.height = minHeight;
@@ -229,8 +326,8 @@ export function calculateResizedBoundingBox(
       break;
       
     case 'left':
-      newBox.x += imageDeltaX;
-      newBox.width -= imageDeltaX;
+      newBox.x += imageDelta.x;
+      newBox.width -= imageDelta.x;
       // Enforce minimum width
       if (newBox.width < minWidth) {
         newBox.x = originalBox.x + originalBox.width - minWidth;
@@ -282,14 +379,7 @@ export function validateBoundingBox(
  * @returns The rotated point
  */
 export function rotatePoint(point: Point, angleInDegrees: number): Point {
-  const angleRad = (angleInDegrees * Math.PI) / 180;
-  const cos = Math.cos(angleRad);
-  const sin = Math.sin(angleRad);
-  
-  return {
-    x: point.x * cos - point.y * sin,
-    y: point.x * sin + point.y * cos,
-  };
+  return applyRotationMatrix(point, degreesToRadians(angleInDegrees));
 }
 
 /**
@@ -302,11 +392,7 @@ export function transformMouseDeltaToFrameLocal(
   mouseDelta: Point, 
   frameRotation: number
 ): Point {
-  const angleRad = (-frameRotation * Math.PI) / 180; // Inverse rotation
-  return {
-    x: mouseDelta.x * Math.cos(angleRad) - mouseDelta.y * Math.sin(angleRad),
-    y: mouseDelta.x * Math.sin(angleRad) + mouseDelta.y * Math.cos(angleRad)
-  };
+  return applyInverseRotationMatrix(mouseDelta, degreesToRadians(frameRotation));
 }
 
 /**
@@ -323,21 +409,18 @@ export function calculateRotatedCorners(
   frameHeight: number,
   frameRotation: number
 ): Point[] {
-  const halfWidth = frameWidth / 2;
-  const halfHeight = frameHeight / 2;
-  const angleRad = (frameRotation * Math.PI) / 180;
+  // Get axis-aligned corners relative to origin
+  const localCorners = calculateAxisAlignedCorners({ x: 0, y: 0 }, frameWidth, frameHeight);
   
-  const localCorners = [
-    {x: -halfWidth, y: -halfHeight}, // topLeft
-    {x: halfWidth, y: -halfHeight},  // topRight
-    {x: halfWidth, y: halfHeight},   // bottomRight  
-    {x: -halfWidth, y: halfHeight}   // bottomLeft
-  ];
-  
-  return localCorners.map(corner => ({
-    x: frameCenter.x + corner.x * Math.cos(angleRad) - corner.y * Math.sin(angleRad),
-    y: frameCenter.y + corner.x * Math.sin(angleRad) + corner.y * Math.cos(angleRad)
-  }));
+  // Apply rotation and translate to actual center
+  const angleRad = degreesToRadians(frameRotation);
+  return localCorners.map(corner => {
+    const rotated = applyRotationMatrix(corner, angleRad);
+    return {
+      x: frameCenter.x + rotated.x,
+      y: frameCenter.y + rotated.y,
+    };
+  });
 }
 
 // ===== PHASE 2: FRAME ANALYSIS FUNCTIONS FOR SPATIAL EDGE-FIXED RESIZE =====
@@ -378,14 +461,14 @@ export function getResizeEdgeMapping(
 ): 'top' | 'right' | 'bottom' | 'left' {
   // Normalize rotation to 0-360 range
   const normalizedRotation = ((rotation % 360) + 360) % 360;
+  const angleRad = degreesToRadians(normalizedRotation);
   
-  // Calculate edge normals (outward pointing)
-  const angleRad = (normalizedRotation * Math.PI) / 180;
+  // Calculate edge normals (outward pointing) using rotation matrix
   const edgeNormals = {
-    top: { x: -Math.sin(angleRad), y: -Math.cos(angleRad) },
-    right: { x: Math.cos(angleRad), y: -Math.sin(angleRad) },
-    bottom: { x: Math.sin(angleRad), y: Math.cos(angleRad) },
-    left: { x: -Math.cos(angleRad), y: Math.sin(angleRad) }
+    top: applyRotationMatrix({ x: 0, y: -1 }, angleRad),
+    right: applyRotationMatrix({ x: 1, y: 0 }, angleRad),
+    bottom: applyRotationMatrix({ x: 0, y: 1 }, angleRad),
+    left: applyRotationMatrix({ x: -1, y: 0 }, angleRad)
   };
   
   // Find edge normal most aligned with drag direction
@@ -490,12 +573,8 @@ export function calculateNewFrameCenter(
   // Use resizeEdge directly (vector from resized edge to center)
   const localDistance = localDistances[resizeEdge];
   
-  // Transform distance from local to global coordinates
-  const angleRad = (frameRotation * Math.PI) / 180;
-  const globalDistance = {
-    x: localDistance.x * Math.cos(angleRad) - localDistance.y * Math.sin(angleRad),
-    y: localDistance.x * Math.sin(angleRad) + localDistance.y * Math.cos(angleRad)
-  };
+  // Transform distance from local to global coordinates using rotation matrix
+  const globalDistance = applyRotationMatrix(localDistance, degreesToRadians(frameRotation));
   
   // New center = fixed edge center + distance from resized edge to center
   return {
@@ -556,10 +635,7 @@ export function calculateSpatialEdgeFixedResize(
   minHeight: number = 20
 ): BoundingBox {
   // Step 1: Convert mouse delta to image coordinates
-  const imageDelta = {
-    x: mouseDelta.x / scaleFactors.scaleX,
-    y: mouseDelta.y / scaleFactors.scaleY
-  };
+  const imageDelta = applyInverseScaleTransform(mouseDelta, scaleFactors);
   
   // Step 2: Transform to frame local coordinates  
   const localDelta = transformMouseDeltaToFrameLocal(imageDelta, frameRotation);
@@ -575,10 +651,12 @@ export function calculateSpatialEdgeFixedResize(
   );
   
   // Step 4: Get current rotated corners
-  const currentCenter = {
-    x: originalBoundingBox.x + originalBoundingBox.width / 2,
-    y: originalBoundingBox.y + originalBoundingBox.height / 2
-  };
+  const currentCenter = calculateRectangleCenter(
+    originalBoundingBox.x,
+    originalBoundingBox.y,
+    originalBoundingBox.width,
+    originalBoundingBox.height
+  );
   const rotatedCorners = calculateRotatedCorners(
     currentCenter, 
     originalBoundingBox.width,
