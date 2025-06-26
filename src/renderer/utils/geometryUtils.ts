@@ -283,9 +283,48 @@ export function createPolygonPath(points: Point[]): string {
 }
 
 /**
- * Calculate new bounding box based on edge resize
+ * Calculate new bounding box based on edge resize (wrapper function)
+ * This function chooses between axis-aligned and spatial edge-fixed resize algorithms
+ * based on whether the frame is rotated.
  */
 export function calculateResizedBoundingBox(
+  originalBox: BoundingBox,
+  edge: 'top' | 'right' | 'bottom' | 'left',
+  mouseDelta: Point,
+  scaleFactors: ScaleFactors,
+  frameRotation: number = 0,
+  minWidth: number = 20,
+  minHeight: number = 20
+): BoundingBox {
+  // For non-rotated frames, use the existing simple algorithm
+  if (frameRotation === 0) {
+    return calculateAxisAlignedResize(
+      originalBox,
+      edge,
+      mouseDelta,
+      scaleFactors,
+      minWidth,
+      minHeight
+    );
+  }
+  
+  // For rotated frames, use the spatial edge-fixed algorithm
+  return calculateSpatialEdgeFixedResize(
+    originalBox,
+    frameRotation,
+    edge,
+    mouseDelta,
+    scaleFactors,
+    minWidth,
+    minHeight
+  );
+}
+
+/**
+ * Calculate new bounding box based on edge resize (axis-aligned algorithm)
+ * This is the original algorithm for non-rotated frames.
+ */
+function calculateAxisAlignedResize(
   originalBox: BoundingBox,
   edge: 'top' | 'right' | 'bottom' | 'left',
   mouseDelta: Point,

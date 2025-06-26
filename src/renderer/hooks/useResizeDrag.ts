@@ -71,6 +71,7 @@ export function useResizeDrag({
         currentDragState.edge,
         mouseDelta,
         scaleFactors,
+        viewportFrame.rotation, // Pass the frame's rotation
         minWidth,
         minHeight
       );

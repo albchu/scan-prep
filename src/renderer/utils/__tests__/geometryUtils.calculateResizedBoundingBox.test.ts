@@ -11,7 +11,8 @@ describe("calculateResizedBoundingBox", () => {
       originalBox,
       "top",
       mouseDelta,
-      scaleFactors
+      scaleFactors,
+      0 // frameRotation
     );
 
     expect(result.x).toBe(10); // X unchanged
@@ -28,7 +29,8 @@ describe("calculateResizedBoundingBox", () => {
       originalBox,
       "right",
       mouseDelta,
-      scaleFactors
+      scaleFactors,
+      0 // frameRotation
     );
 
     expect(result.x).toBe(10); // X unchanged
@@ -45,7 +47,8 @@ describe("calculateResizedBoundingBox", () => {
       originalBox,
       "bottom",
       mouseDelta,
-      scaleFactors
+      scaleFactors,
+      0 // frameRotation
     );
 
     expect(result.x).toBe(10); // X unchanged
@@ -62,7 +65,8 @@ describe("calculateResizedBoundingBox", () => {
       originalBox,
       "left",
       mouseDelta,
-      scaleFactors
+      scaleFactors,
+      0 // frameRotation
     );
 
     expect(result.x).toBe(7); // X moved left by 3
@@ -81,6 +85,7 @@ describe("calculateResizedBoundingBox", () => {
       "left",
       mouseDelta,
       scaleFactors,
+      0, // frameRotation
       minWidth
     );
 
@@ -100,7 +105,8 @@ describe("calculateResizedBoundingBox", () => {
       "top",
       mouseDelta,
       scaleFactors,
-      20,
+      0, // frameRotation
+      20, // minWidth
       minHeight
     );
 
@@ -119,7 +125,8 @@ describe("calculateResizedBoundingBox", () => {
       originalBox,
       "right",
       mouseDelta,
-      scaleFactors
+      scaleFactors,
+      0 // frameRotation
     );
 
     // 20 display pixels = 10 image pixels at 2x scale
