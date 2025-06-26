@@ -729,8 +729,7 @@ export function validateImageBoundariesWithFixedEdge(
 
   // Calculate the maximum dimensions that would fit within image boundaries
   // while maintaining the fixed edge constraint
-  let constrainedDimensions = { ...frameDimensions };
-  let needsRecalculation = false;
+  const constrainedDimensions = { ...frameDimensions };
 
   // For rotated frames, we need to be more careful about boundary constraints
   // Calculate what the maximum frame dimensions could be while keeping the fixed edge in place
@@ -771,7 +770,6 @@ export function validateImageBoundariesWithFixedEdge(
     const reductionFactor = 0.95;
     constrainedDimensions.width *= reductionFactor;
     constrainedDimensions.height *= reductionFactor;
-    needsRecalculation = true;
     iteration++;
   }
   
@@ -830,17 +828,21 @@ export function calculateSpatialEdgeFixedResize(
     // Step 2: Transform to frame local coordinates  
     const localDelta = transformMouseDeltaToFrameLocal(imageDelta, frameRotation);
     
-    // Step 3: Calculate new frame dimensions
+    // Step 3: Calculate the ORIGINAL frame dimensions (CRITICAL FIX)
+    // The bounding box dimensions are axis-aligned, but we need the actual frame dimensions
+    const originalFrameDimensions = calculateOriginalFrameDimensions(originalBoundingBox, frameRotation);
+    
+    // Step 4: Calculate new frame dimensions based on the ORIGINAL dimensions
     const newDimensions = calculateNewFrameDimensions(
-      originalBoundingBox.width,
-      originalBoundingBox.height,
+      originalFrameDimensions.width,
+      originalFrameDimensions.height,
       resizeEdge,
       localDelta,
       minWidth,
       minHeight
     );
     
-    // Step 4: Get current rotated corners
+    // Step 5: Get current rotated corners using the ORIGINAL frame dimensions
     const currentCenter = calculateRectangleCenter(
       originalBoundingBox.x,
       originalBoundingBox.y,
@@ -849,16 +851,16 @@ export function calculateSpatialEdgeFixedResize(
     );
     const rotatedCorners = calculateRotatedCorners(
       currentCenter, 
-      originalBoundingBox.width,
-      originalBoundingBox.height, 
+      originalFrameDimensions.width,
+      originalFrameDimensions.height, 
       frameRotation
     );
     
-    // Step 5: Identify fixed edge and its center
+    // Step 6: Identify fixed edge and its center
     const oppositeEdge = getOppositeEdge(resizeEdge);
     const fixedEdgeCenter = getFixedEdgeCenter(rotatedCorners, oppositeEdge);
     
-    // Step 6: Calculate new frame center
+    // Step 7: Calculate new frame center
     const newFrameCenter = calculateNewFrameCenter(
       fixedEdgeCenter,
       newDimensions.width,
@@ -867,7 +869,7 @@ export function calculateSpatialEdgeFixedResize(
       resizeEdge
     );
     
-    // Step 7: Calculate new axis-aligned bounding box
+    // Step 8: Calculate new axis-aligned bounding box using the NEW frame dimensions
     const newBoundingBox = calculateAxisAlignedBoundingBox(
       newFrameCenter,
       newDimensions.width,
@@ -875,7 +877,7 @@ export function calculateSpatialEdgeFixedResize(
       frameRotation
     );
     
-    // Step 8: Validate image boundaries (with fixed-edge preservation)
+    // Step 9: Validate image boundaries (with fixed-edge preservation)
     if (imageWidth < Infinity && imageHeight < Infinity) {
       return validateImageBoundariesWithFixedEdge(
         newBoundingBox,
@@ -895,4 +897,123 @@ export function calculateSpatialEdgeFixedResize(
     console.error('Error in calculateSpatialEdgeFixedResize:', error);
     return originalBoundingBox;
   }
+}
+
+/**
+ * Calculate the original frame dimensions from a bounding box and rotation
+ * This reverses the axis-aligned bounding box calculation to get the original frame size
+ * 
+ * IMPORTANT: This is a critical fix for the spatial edge-fixed resize algorithm.
+ * The issue was that we were using bounding box dimensions as frame dimensions,
+ * but for rotated frames, the bounding box is larger than the actual frame.
+ * 
+ * @param boundingBox - The current axis-aligned bounding box
+ * @param rotation - The rotation angle in degrees
+ * @returns The original unrotated frame dimensions
+ */
+function calculateOriginalFrameDimensions(
+  boundingBox: BoundingBox,
+  rotation: number
+): { width: number, height: number } {
+  // For 0° rotation, the bounding box dimensions are the frame dimensions
+  if (Math.abs(rotation % 360) < 0.01) {
+    return { width: boundingBox.width, height: boundingBox.height };
+  }
+  
+  // For rotated frames, we need to solve the inverse bounding box problem:
+  // Given: boundingWidth, boundingHeight, rotation
+  // Find: originalWidth, originalHeight
+  // Such that: calculateAxisAlignedBoundingBox(center, originalWidth, originalHeight, rotation) 
+  //           produces boundingWidth × boundingHeight
+  
+  const angleRad = Math.abs((rotation * Math.PI) / 180);
+  const cos = Math.abs(Math.cos(angleRad));
+  const sin = Math.abs(Math.sin(angleRad));
+  
+  // The bounding box calculation is:
+  // boundingWidth = originalWidth * cos + originalHeight * sin
+  // boundingHeight = originalWidth * sin + originalHeight * cos
+  
+  // This is a system of 2 equations with 2 unknowns:
+  // bw = w*cos + h*sin  ... (1)
+  // bh = w*sin + h*cos  ... (2)
+  
+  // Solving for w and h:
+  // From (1): h = (bw - w*cos) / sin
+  // Substitute into (2): bh = w*sin + ((bw - w*cos) / sin)*cos
+  // Simplify: bh = w*sin + (bw*cos - w*cos²) / sin
+  // Multiply by sin: bh*sin = w*sin² + bw*cos - w*cos²
+  // Rearrange: bh*sin - bw*cos = w*(sin² - cos²) = -w*cos(2θ)
+  // Therefore: w = (bw*cos - bh*sin) / (cos² - sin²) = (bw*cos - bh*sin) / cos(2θ)
+  
+  const bw = boundingBox.width;
+  const bh = boundingBox.height;
+  
+  // Handle special cases where cos(2θ) ≈ 0 (45°, 135°, etc.)
+  const cos2theta = cos * cos - sin * sin;
+  
+  if (Math.abs(cos2theta) < 0.01) {
+    // For 45° rotations, use a different approach
+    // At 45°, cos = sin = 1/√2, so:
+    // bw = w/√2 + h/√2 = (w + h)/√2
+    // bh = w/√2 + h/√2 = (w + h)/√2
+    // This means bw = bh and w + h = bw*√2
+    
+    // We need another constraint. Use the assumption that the original
+    // aspect ratio is preserved in some sense.
+    // For 45° rotation, we can use: w*h = (bw*bh) / 2
+    
+    const sum = (bw + bh) / Math.sqrt(2);
+    const product = (bw * bh) / 2;
+    
+    // Solve quadratic: w + h = sum, w*h = product
+    // w² - sum*w + product = 0
+    const discriminant = sum * sum - 4 * product;
+    
+    if (discriminant >= 0) {
+      const sqrt_discriminant = Math.sqrt(discriminant);
+      const w1 = (sum + sqrt_discriminant) / 2;
+      const w2 = (sum - sqrt_discriminant) / 2;
+      
+      // Choose the solution that makes more sense (larger dimension first)
+      const originalWidth = Math.max(w1, w2);
+      const originalHeight = Math.min(w1, w2);
+      
+      return { width: originalWidth, height: originalHeight };
+    } else {
+      // Fallback: assume square
+      const avgDim = Math.sqrt(bw * bh);
+      return { width: avgDim, height: avgDim };
+    }
+  }
+  
+  // General case: solve the linear system
+  const originalWidth = (bw * cos - bh * sin) / cos2theta;
+  const originalHeight = (bh * cos - bw * sin) / cos2theta;
+  
+  // Ensure positive dimensions
+  const width = Math.abs(originalWidth);
+  const height = Math.abs(originalHeight);
+  
+  // Sanity check: the calculated dimensions should produce the original bounding box
+  const verificationBoundingBox = calculateAxisAlignedBoundingBox(
+    { x: 0, y: 0 }, width, height, rotation
+  );
+  
+  const widthError = Math.abs(verificationBoundingBox.width - bw);
+  const heightError = Math.abs(verificationBoundingBox.height - bh);
+  
+  // If the error is too large, fall back to a heuristic
+  if (widthError > 1 || heightError > 1) {
+    // Fallback: use area preservation with aspect ratio from bounding box
+    const frameArea = bw * bh * (cos * cos + sin * sin) / (cos + sin);
+    const aspectRatio = bw / bh; // Use bounding box aspect ratio as approximation
+    
+    const fallbackWidth = Math.sqrt(frameArea * aspectRatio);
+    const fallbackHeight = Math.sqrt(frameArea / aspectRatio);
+    
+    return { width: fallbackWidth, height: fallbackHeight };
+  }
+  
+  return { width, height };
 } 
