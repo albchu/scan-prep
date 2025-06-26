@@ -1,4 +1,5 @@
 import { getFixedEdgeCenter, calculateRotatedCorners, Point } from "../geometryUtils";
+import { FRAME_EDGES } from "@shared/types";
 
 describe("getFixedEdgeCenter", () => {
   it("should calculate correct edge centers for axis-aligned rectangle", () => {
@@ -68,12 +69,7 @@ describe("getFixedEdgeCenter", () => {
     // For a 20x20 square rotated 45°, the edge centers should be at distance 10 from center
     const expectedDistance = 10; // Half the side length
 
-    const edges: ("top" | "right" | "bottom" | "left")[] = [
-      "top",
-      "right",
-      "bottom",
-      "left",
-    ];
+        const edges = FRAME_EDGES;
     edges.forEach((edge) => {
       const edgeCenter = getFixedEdgeCenter(corners, edge);
       const distance = Math.sqrt(

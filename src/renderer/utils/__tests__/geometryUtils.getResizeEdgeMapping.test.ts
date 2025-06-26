@@ -1,4 +1,5 @@
 import { getResizeEdgeMapping } from "../geometryUtils";
+import { FRAME_EDGES } from "@shared/types";
 
 describe("getResizeEdgeMapping", () => {
   it("should map drag directions correctly for 0° rotation", () => {
@@ -73,12 +74,7 @@ describe("getResizeEdgeMapping", () => {
 
     // For 45° rotation, cardinal directions should map to diagonal edges
     // This is more complex, but we can test that it returns a valid edge
-    const edges: ("top" | "right" | "bottom" | "left")[] = [
-      "top",
-      "right",
-      "bottom",
-      "left",
-    ];
+    const edges = FRAME_EDGES;
 
     expect(edges).toContain(getResizeEdgeMapping(rotation, { x: 0, y: -1 }));
     expect(edges).toContain(getResizeEdgeMapping(rotation, { x: 1, y: 0 }));

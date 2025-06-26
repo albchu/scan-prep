@@ -1,4 +1,5 @@
 import { getOppositeEdge } from "../geometryUtils";
+import { FRAME_EDGES } from "@shared/types";
 
 describe("getOppositeEdge", () => {
   it("should return correct opposite edges", () => {
@@ -9,12 +10,7 @@ describe("getOppositeEdge", () => {
   });
 
   it("should be symmetric (opposite of opposite should be original)", () => {
-    const edges: ("top" | "right" | "bottom" | "left")[] = [
-      "top",
-      "right",
-      "bottom",
-      "left",
-    ];
+    const edges = FRAME_EDGES;
 
     edges.forEach((edge) => {
       const opposite = getOppositeEdge(edge);

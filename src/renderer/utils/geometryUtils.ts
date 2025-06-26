@@ -1,4 +1,4 @@
-import { ViewportFrame, BoundingBox } from '@shared/types';
+import { ViewportFrame, BoundingBox, FrameEdge } from '@shared/types';
 
 export interface Point {
   x: number;
@@ -216,7 +216,7 @@ export function createPolygonPath(points: Point[]): string {
  */
 export function calculateResizedBoundingBox(
   originalBox: BoundingBox,
-  edge: 'top' | 'right' | 'bottom' | 'left',
+  edge: FrameEdge,
   mouseDelta: Point,
   scaleFactors: ScaleFactors,
   frameRotation: number = 0,
@@ -257,7 +257,7 @@ export function calculateResizedBoundingBox(
  */
 function calculateAxisAlignedResize(
   originalBox: BoundingBox,
-  edge: 'top' | 'right' | 'bottom' | 'left',
+  edge: FrameEdge,
   mouseDelta: Point,
   scaleFactors: ScaleFactors,
   minWidth: number = 20,
@@ -395,7 +395,7 @@ export function calculateRotatedCorners(
  */
 export function getFixedEdgeCenter(
   rotatedCorners: Point[],
-  edge: 'top' | 'right' | 'bottom' | 'left'
+  edge: FrameEdge
 ): Point {
   const edgeCornerMap = {
     'top': [rotatedCorners[0], rotatedCorners[1]], // topLeft, topRight
@@ -420,7 +420,7 @@ export function getFixedEdgeCenter(
 export function getResizeEdgeMapping(
   rotation: number, 
   dragDirection: Point
-): 'top' | 'right' | 'bottom' | 'left' {
+): FrameEdge {
   // Normalize rotation to 0-360 range
   const normalizedRotation = ((rotation % 360) + 360) % 360;
   const angleRad = degreesToRadians(normalizedRotation);
@@ -434,14 +434,14 @@ export function getResizeEdgeMapping(
   };
   
   // Find edge normal most aligned with drag direction
-  let bestEdge: 'top' | 'right' | 'bottom' | 'left' = 'top';
+  let bestEdge: FrameEdge = 'top';
   let bestDot = -Infinity;
   
   for (const [edge, normal] of Object.entries(edgeNormals)) {
     const dot = dragDirection.x * normal.x + dragDirection.y * normal.y;
     if (dot > bestDot) {
       bestDot = dot;
-      bestEdge = edge as 'top' | 'right' | 'bottom' | 'left';
+      bestEdge = edge as FrameEdge;
     }
   }
   
@@ -453,7 +453,7 @@ export function getResizeEdgeMapping(
  * @param edge - The edge to get the opposite of
  * @returns The opposite edge
  */
-export function getOppositeEdge(edge: 'top' | 'right' | 'bottom' | 'left'): 'top' | 'right' | 'bottom' | 'left' {
+export function getOppositeEdge(edge: FrameEdge): FrameEdge {
   const opposites = {
     'top': 'bottom' as const,
     'right': 'left' as const,
@@ -478,7 +478,7 @@ export function getOppositeEdge(edge: 'top' | 'right' | 'bottom' | 'left'): 'top
 export function calculateNewFrameDimensions(
   originalWidth: number,
   originalHeight: number, 
-  resizeEdge: 'top' | 'right' | 'bottom' | 'left',
+  resizeEdge: FrameEdge,
   localMouseDelta: Point,
   minWidth: number = 20,
   minHeight: number = 20
@@ -522,7 +522,7 @@ export function calculateNewFrameCenter(
   newWidth: number,
   newHeight: number,
   frameRotation: number,
-  resizeEdge: 'top' | 'right' | 'bottom' | 'left'
+  resizeEdge: FrameEdge
 ): Point {
   // Distance from center to each edge in local coordinates
   const localDistances = {
@@ -634,7 +634,7 @@ export function validateImageBoundariesWithFixedEdge(
   fixedEdgeCenter: Point,
   frameDimensions: {width: number, height: number},
   frameRotation: number,
-  resizeEdge: 'top' | 'right' | 'bottom' | 'left',
+  resizeEdge: FrameEdge,
   imageWidth: number,
   imageHeight: number
 ): BoundingBox {
@@ -720,7 +720,7 @@ export function validateImageBoundariesWithFixedEdge(
 export function calculateSpatialEdgeFixedResize(
   originalBoundingBox: BoundingBox,
   frameRotation: number,
-  resizeEdge: 'top' | 'right' | 'bottom' | 'left',
+  resizeEdge: FrameEdge,
   mouseDelta: Point,
   scaleFactors: ScaleFactors,
   imageWidth: number = Infinity,

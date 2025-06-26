@@ -5,6 +5,7 @@ import {
   getOppositeEdge,
   calculateRectangleCenter
 } from "../geometryUtils";
+import { FrameEdge } from "@shared/types";
 
 describe("validateImageBoundariesWithFixedEdge", () => {
   const imageWidth = 1000;
@@ -145,11 +146,11 @@ describe("validateImageBoundariesWithFixedEdge", () => {
       0 // No rotation for simplicity
     );
 
-    const testCases = [
-      { resizeEdge: 'top' as const, oppositeEdge: 'bottom' as const },
-      { resizeEdge: 'right' as const, oppositeEdge: 'left' as const },
-      { resizeEdge: 'bottom' as const, oppositeEdge: 'top' as const },
-      { resizeEdge: 'left' as const, oppositeEdge: 'right' as const },
+    const testCases: Array<{ resizeEdge: FrameEdge, oppositeEdge: FrameEdge }> = [
+      { resizeEdge: 'top', oppositeEdge: 'bottom' },
+      { resizeEdge: 'right', oppositeEdge: 'left' },
+      { resizeEdge: 'bottom', oppositeEdge: 'top' },
+      { resizeEdge: 'left', oppositeEdge: 'right' },
     ];
 
     testCases.forEach(({ resizeEdge, oppositeEdge }) => {

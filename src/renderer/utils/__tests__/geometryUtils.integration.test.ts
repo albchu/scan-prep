@@ -10,7 +10,7 @@ import {
   Point,
 } from "../geometryUtils";
 
-import { BoundingBox } from "@shared/types";
+import { BoundingBox, FRAME_EDGES } from "@shared/types";
 
 // Local helper function for testing inverse relationship
 function rotatePoint(point: Point, angleInDegrees: number): Point {
@@ -95,13 +95,8 @@ describe("Geometry Utils Integration Tests", () => {
         expect(centroid.x).toBeCloseTo(center.x, 10);
         expect(centroid.y).toBeCloseTo(center.y, 10);
 
-        // Verify that edge centers are properly calculated
-        const edges: ("top" | "right" | "bottom" | "left")[] = [
-          "top",
-          "right",
-          "bottom",
-          "left",
-        ];
+              // Verify that edge centers are properly calculated
+      const edges = FRAME_EDGES;
         edges.forEach((edge) => {
           const edgeCenter = getFixedEdgeCenter(corners, edge);
 
@@ -254,12 +249,7 @@ describe("Geometry Utils Integration Tests", () => {
         const scaleFactors = { scaleX, scaleY };
 
         // Test all edges for this configuration
-        const edges: ("top" | "right" | "bottom" | "left")[] = [
-          "top",
-          "right",
-          "bottom",
-          "left",
-        ];
+        const edges = FRAME_EDGES;
 
         edges.forEach((edge) => {
           const result = calculateSpatialEdgeFixedResize(

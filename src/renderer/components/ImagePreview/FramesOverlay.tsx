@@ -1,7 +1,7 @@
 import { useImageStore } from "@/renderer/stores/imageStore";
 import { calculateImageCoordinates } from "@/renderer/utils/imageUtils";
 import { generateViewportFrameIpc } from "../../services/ipc-requests";
-import { ViewportFrame, BoundingBox } from "@shared/types";
+import { ViewportFrame, BoundingBox, FrameEdge } from "@shared/types";
 import React, { useCallback, useRef } from "react";
 import { useRotationDrag } from "../../hooks/useRotationDrag";
 import { useResizeDrag } from "../../hooks/useResizeDrag";
@@ -77,7 +77,7 @@ export const FramesOverlay: React.FC<InteractiveViewportFrameOverlayProps> = ({
   const handleResize = useCallback((
     event: React.MouseEvent,
     viewportFrame: ViewportFrame,
-    edge: 'top' | 'right' | 'bottom' | 'left'
+    edge: FrameEdge
   ) => {
     handleResizeStart(event, viewportFrame, edge, overlayRef.current);
   }, [handleResizeStart]);

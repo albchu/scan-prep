@@ -1,4 +1,5 @@
 import { calculateSpatialEdgeFixedResize, calculateResizedBoundingBox, Point } from "../geometryUtils";
+import { FRAME_EDGES } from "@shared/types";
 import { BoundingBox } from "@shared/types";
 
 describe("calculateSpatialEdgeFixedResize", () => {
@@ -240,12 +241,7 @@ describe("calculateSpatialEdgeFixedResize", () => {
     };
     const frameRotation = 15; // Slight rotation to test spatial behavior
     const mouseDelta: Point = { x: 10, y: 10 };
-    const edges: ("top" | "right" | "bottom" | "left")[] = [
-      "top",
-      "right",
-      "bottom",
-      "left",
-    ];
+          const edges = FRAME_EDGES;
 
     edges.forEach((edge) => {
       const result = calculateSpatialEdgeFixedResize(

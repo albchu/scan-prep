@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ViewportFrame, BoundingBox } from '@shared/types';
+import { ViewportFrame, BoundingBox, FrameEdge } from '@shared/types';
 import { 
   calculateResizedBoundingBox,
   validateBoundingBox,
@@ -11,8 +11,8 @@ import {
 
 interface ResizeDragState {
   frameId: string;
-  initialEdge: 'top' | 'right' | 'bottom' | 'left'; // The handle that was clicked
-  currentEdge: 'top' | 'right' | 'bottom' | 'left'; // The edge currently being resized (may change based on drag direction)
+  initialEdge: FrameEdge; // The handle that was clicked
+  currentEdge: FrameEdge; // The edge currently being resized (may change based on drag direction)
   startBoundingBox: BoundingBox;
   startMousePosition: Point;
   containerElement: HTMLElement;
@@ -149,7 +149,7 @@ export function useResizeDrag({
   const handleResizeStart = useCallback((
     event: React.MouseEvent,
     viewportFrame: ViewportFrame,
-    edge: 'top' | 'right' | 'bottom' | 'left',
+    edge: FrameEdge,
     containerElement: HTMLElement | null
   ) => {
     event.preventDefault();

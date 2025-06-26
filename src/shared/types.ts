@@ -87,3 +87,14 @@ export interface AnalysisOptions {
   minAreaThreshold: number; // Minimum area in pixels to consider
   minDimensionThreshold: number; // Minimum width or height in pixels
 }
+
+/**
+ * Represents the four edges of a rectangular frame
+ * Used for resize operations and edge-based calculations
+ */
+export type FrameEdge = 'top' | 'right' | 'bottom' | 'left';
+
+/**
+ * Array of all frame edges for iteration purposes
+ */
+export const FRAME_EDGES: readonly FrameEdge[] = ['top', 'right', 'bottom', 'left'] as const;

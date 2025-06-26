@@ -1,5 +1,5 @@
 import React from "react";
-import { ViewportFrame } from "@shared/types";
+import { ViewportFrame, FrameEdge } from "@shared/types";
 import { getBoundingBoxCenter } from "../../utils/geometryUtils";
 import styles from "./ViewportFrameOverlay.module.css";
 import { RotateHandle } from "./RotateHandle";
@@ -15,7 +15,7 @@ interface ViewportFrameOverlayProps {
     event: React.MouseEvent,
     viewportFrame: ViewportFrame
   ) => void;
-  handleResize: (event: React.MouseEvent, viewportFrame: ViewportFrame, edge: 'top' | 'right' | 'bottom' | 'left') => void;
+  handleResize: (event: React.MouseEvent, viewportFrame: ViewportFrame, edge: FrameEdge) => void;
 }
 
 export const ViewportFrameOverlay: React.FC<ViewportFrameOverlayProps> = ({
