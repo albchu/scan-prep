@@ -4,16 +4,19 @@ import {
   calculateResizedBoundingBox,
   validateBoundingBox,
   getMousePositionRelativeToElement,
+  getResizeEdgeMapping,
   ScaleFactors,
   Point
 } from '../utils/geometryUtils';
 
 interface ResizeDragState {
   frameId: string;
-  edge: 'top' | 'right' | 'bottom' | 'left';
+  initialEdge: 'top' | 'right' | 'bottom' | 'left'; // The handle that was clicked
+  currentEdge: 'top' | 'right' | 'bottom' | 'left'; // The edge currently being resized (may change based on drag direction)
   startBoundingBox: BoundingBox;
   startMousePosition: Point;
   containerElement: HTMLElement;
+  edgeMappingActive: boolean; // Whether dynamic edge mapping is active
 }
 
 interface UseResizeDragProps {
@@ -65,13 +68,48 @@ export function useResizeDrag({
         y: mousePos.y - currentDragState.startMousePosition.y,
       };
       
-      // Calculate new bounding box based on edge and mouse delta
+      // Determine which edge to resize based on drag direction for rotated frames
+      let resizeEdge = currentDragState.currentEdge;
+      
+      // For rotated frames, determine the appropriate edge based on drag direction
+      // Only activate edge mapping after a minimum drag distance to avoid jitter
+      const dragDistance = Math.sqrt(mouseDelta.x * mouseDelta.x + mouseDelta.y * mouseDelta.y);
+      const minDragDistance = 5; // pixels
+      
+      if (viewportFrame.rotation !== 0 && dragDistance > minDragDistance) {
+        // Normalize drag direction
+        const dragDirection = {
+          x: mouseDelta.x / dragDistance,
+          y: mouseDelta.y / dragDistance
+        };
+        
+        // Get the edge mapping based on frame rotation and drag direction
+        const mappedEdge = getResizeEdgeMapping(viewportFrame.rotation, dragDirection);
+        
+        // Update the current edge if it has changed
+        if (mappedEdge !== currentDragState.currentEdge) {
+          resizeEdge = mappedEdge;
+          
+          // Update the drag state to reflect the new edge
+          const updatedDragState = {
+            ...currentDragState,
+            currentEdge: mappedEdge,
+            edgeMappingActive: true
+          };
+          setDragState(updatedDragState);
+          dragStateRef.current = updatedDragState;
+        }
+      }
+      
+      // Calculate new bounding box based on the determined edge
       const newBoundingBox = calculateResizedBoundingBox(
         currentDragState.startBoundingBox,
-        currentDragState.edge,
+        resizeEdge,
         mouseDelta,
         scaleFactors,
         viewportFrame.rotation, // Pass the frame's rotation
+        imageWidth,
+        imageHeight,
         minWidth,
         minHeight
       );
@@ -124,15 +162,19 @@ export function useResizeDrag({
     // Store the initial state for dragging
     setDragState({
       frameId: viewportFrame.id,
-      edge,
+      initialEdge: edge, // Store the handle that was clicked
+      currentEdge: edge, // Initially, current edge is the same as initial edge
       startBoundingBox: { ...viewportFrame.boundingBox },
       startMousePosition: mousePos,
       containerElement,
+      edgeMappingActive: false, // Edge mapping starts inactive
     });
   }, []);
 
   return {
     handleResizeStart,
     isDragging: dragState !== null,
+    currentEdge: dragState?.currentEdge || null, // Expose current edge for debugging/UI feedback
+    edgeMappingActive: dragState?.edgeMappingActive || false, // Expose edge mapping state
   };
 } 

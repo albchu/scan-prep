@@ -15,7 +15,9 @@ describe("calculateSpatialEdgeFixedResize", () => {
         frameRotation,
         "right",
         mouseDelta,
-        scaleFactors
+        scaleFactors,
+        Infinity, // imageWidth
+        Infinity  // imageHeight
       );
       
       // Should return a valid bounding box
@@ -35,7 +37,9 @@ describe("calculateSpatialEdgeFixedResize", () => {
         frameRotation,
         "top",
         mouseDelta,
-        scaleFactors
+        scaleFactors,
+        Infinity, // imageWidth
+        Infinity  // imageHeight
       );
       
       // Should return a valid bounding box
@@ -58,6 +62,8 @@ describe("calculateSpatialEdgeFixedResize", () => {
         "left",
         mouseDelta,
         scaleFactors,
+        Infinity, // imageWidth
+        Infinity, // imageHeight
         minWidth,
         minHeight
       );
@@ -158,7 +164,9 @@ describe("calculateSpatialEdgeFixedResize", () => {
       frameRotation,
       resizeEdge,
       mouseDelta,
-      scaleFactors
+      scaleFactors,
+      Infinity, // imageWidth
+      Infinity  // imageHeight
     );
 
     // For 0° rotation, should increase width and keep left edge fixed
@@ -184,7 +192,9 @@ describe("calculateSpatialEdgeFixedResize", () => {
       frameRotation,
       resizeEdge,
       mouseDelta,
-      scaleFactors
+      scaleFactors,
+      Infinity, // imageWidth
+      Infinity  // imageHeight
     );
 
     // This test mainly verifies the function runs without error and produces reasonable output
@@ -211,7 +221,9 @@ describe("calculateSpatialEdgeFixedResize", () => {
       frameRotation,
       resizeEdge,
       mouseDelta,
-      scaleFactors
+      scaleFactors,
+      Infinity, // imageWidth
+      Infinity  // imageHeight
     );
 
     // With 2x scale, 40 display pixels = 20 image pixels
@@ -241,7 +253,9 @@ describe("calculateSpatialEdgeFixedResize", () => {
         frameRotation,
         edge,
         mouseDelta,
-        scaleFactors
+        scaleFactors,
+        Infinity, // imageWidth
+        Infinity  // imageHeight
       );
 
       // Each edge resize should produce valid results

@@ -7,6 +7,7 @@ import {
   getOppositeEdge,
   calculateNewFrameDimensions,
   calculateSpatialEdgeFixedResize,
+  calculateResizedBoundingBox,
   Point,
 } from "../geometryUtils";
 
@@ -272,6 +273,292 @@ describe("Geometry Utils Integration Tests", () => {
           // The new area should be related to the original area in a reasonable way
           // (allowing for significant changes due to rotation effects)
           expect(newArea).toBeLessThan(originalArea * 10); // Sanity check upper bound
+        });
+      });
+    });
+  });
+
+  describe("Boundary Validation", () => {
+    const scaleFactors = { scaleX: 1, scaleY: 1 };
+    const imageWidth = 1000;
+    const imageHeight = 800;
+
+    describe("Boundary validation with spatial edge-fixed resize", () => {
+      it("should constrain resize when frame would exceed image boundaries", () => {
+        // Frame near the right edge of the image
+        const originalBox: BoundingBox = { x: 900, y: 400, width: 80, height: 60 };
+        const frameRotation = 0;
+        const mouseDelta: Point = { x: 200, y: 0 }; // Try to resize way beyond image boundary
+        
+        const result = calculateSpatialEdgeFixedResize(
+          originalBox,
+          frameRotation,
+          "right",
+          mouseDelta,
+          scaleFactors,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Result should be constrained within image boundaries
+        expect(result.x).toBeGreaterThanOrEqual(0);
+        expect(result.y).toBeGreaterThanOrEqual(0);
+        expect(result.x + result.width).toBeLessThanOrEqual(imageWidth);
+        expect(result.y + result.height).toBeLessThanOrEqual(imageHeight);
+        
+        // Should be larger than original but not exceed boundaries
+        expect(result.width).toBeGreaterThan(originalBox.width);
+        expect(result.x + result.width).toBeLessThanOrEqual(imageWidth);
+      });
+
+      it("should handle rotated frames near image boundaries", () => {
+        // Rotated frame near corner
+        const originalBox: BoundingBox = { x: 850, y: 650, width: 200, height: 100 };
+        const frameRotation = 45;
+        const mouseDelta: Point = { x: 100, y: 100 }; // Try to resize beyond boundaries
+        
+        const result = calculateSpatialEdgeFixedResize(
+          originalBox,
+          frameRotation,
+          "bottom",
+          mouseDelta,
+          scaleFactors,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Result should be constrained within image boundaries
+        expect(result.x).toBeGreaterThanOrEqual(0);
+        expect(result.y).toBeGreaterThanOrEqual(0);
+        expect(result.x + result.width).toBeLessThanOrEqual(imageWidth);
+        expect(result.y + result.height).toBeLessThanOrEqual(imageHeight);
+      });
+
+      it("should preserve fixed edge constraint even with boundary validation", () => {
+        // Frame that will hit boundary but should maintain fixed edge
+        const originalBox: BoundingBox = { x: 50, y: 50, width: 100, height: 100 };
+        const frameRotation = 30;
+        const mouseDelta: Point = { x: -200, y: -200 }; // Try to resize beyond left/top boundaries
+        
+        const result = calculateSpatialEdgeFixedResize(
+          originalBox,
+          frameRotation,
+          "left",
+          mouseDelta,
+          scaleFactors,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Should maintain valid dimensions and stay within boundaries
+        expect(result.x).toBeGreaterThanOrEqual(0);
+        expect(result.y).toBeGreaterThanOrEqual(0);
+        expect(result.width).toBeGreaterThan(0);
+        expect(result.height).toBeGreaterThan(0);
+      });
+    });
+
+    describe("Performance optimizations", () => {
+      it("should skip processing for very small mouse movements", () => {
+        const originalBox: BoundingBox = { x: 100, y: 100, width: 100, height: 100 };
+        const frameRotation = 45;
+        const tinyMouseDelta: Point = { x: 0.1, y: 0.1 }; // Very small movement
+        
+        const result = calculateSpatialEdgeFixedResize(
+          originalBox,
+          frameRotation,
+          "right",
+          tinyMouseDelta,
+          scaleFactors,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Should return original box unchanged (performance optimization)
+        expect(result).toEqual(originalBox);
+      });
+
+      it("should process normal-sized mouse movements", () => {
+        const originalBox: BoundingBox = { x: 100, y: 100, width: 100, height: 100 };
+        const frameRotation = 45;
+        const normalMouseDelta: Point = { x: 10, y: 0 }; // Normal movement
+        
+        const result = calculateSpatialEdgeFixedResize(
+          originalBox,
+          frameRotation,
+          "right",
+          normalMouseDelta,
+          scaleFactors,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Should process the resize (not return original box)
+        expect(result).not.toEqual(originalBox);
+        expect(result.width).toBeGreaterThan(0);
+        expect(result.height).toBeGreaterThan(0);
+      });
+    });
+
+    describe("Error handling and robustness", () => {
+      it("should handle invalid bounding box gracefully", () => {
+        const invalidBox: BoundingBox = { x: NaN, y: 100, width: -50, height: 100 };
+        const frameRotation = 45;
+        const mouseDelta: Point = { x: 10, y: 0 };
+        
+        const result = calculateSpatialEdgeFixedResize(
+          invalidBox,
+          frameRotation,
+          "right",
+          mouseDelta,
+          scaleFactors,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Should fall back to original box
+        expect(result).toEqual(invalidBox);
+      });
+
+      it("should handle invalid scale factors gracefully", () => {
+        const originalBox: BoundingBox = { x: 100, y: 100, width: 100, height: 100 };
+        const frameRotation = 45;
+        const mouseDelta: Point = { x: 10, y: 0 };
+        const invalidScaleFactors = { scaleX: 0, scaleY: -1 }; // Invalid scale factors
+        
+        const result = calculateSpatialEdgeFixedResize(
+          originalBox,
+          frameRotation,
+          "right",
+          mouseDelta,
+          invalidScaleFactors,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Should fall back to original box
+        expect(result).toEqual(originalBox);
+      });
+
+      it("should handle infinite rotation gracefully", () => {
+        const originalBox: BoundingBox = { x: 100, y: 100, width: 100, height: 100 };
+        const invalidRotation = Infinity;
+        const mouseDelta: Point = { x: 10, y: 0 };
+        
+        const result = calculateSpatialEdgeFixedResize(
+          originalBox,
+          invalidRotation,
+          "right",
+          mouseDelta,
+          scaleFactors,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Should fall back to original box
+        expect(result).toEqual(originalBox);
+      });
+    });
+
+    describe("Wrapper function integration with boundary validation", () => {
+      it("should pass image dimensions correctly for rotated frames", () => {
+        const originalBox: BoundingBox = { x: 950, y: 400, width: 100, height: 100 };
+        const frameRotation = 45;
+        const mouseDelta: Point = { x: 100, y: 0 }; // Would exceed boundary
+        
+        const result = calculateResizedBoundingBox(
+          originalBox,
+          "right",
+          mouseDelta,
+          scaleFactors,
+          frameRotation,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Should respect image boundaries
+        expect(result.x + result.width).toBeLessThanOrEqual(imageWidth);
+        expect(result.y + result.height).toBeLessThanOrEqual(imageHeight);
+      });
+
+      it("should maintain backward compatibility for non-rotated frames", () => {
+        const originalBox: BoundingBox = { x: 950, y: 400, width: 100, height: 100 };
+        const frameRotation = 0; // No rotation
+        const mouseDelta: Point = { x: 100, y: 0 }; // Would exceed boundary
+        
+        const result = calculateResizedBoundingBox(
+          originalBox,
+          "right",
+          mouseDelta,
+          scaleFactors,
+          frameRotation,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Should use axis-aligned algorithm but still respect boundaries
+        expect(result.x).toBe(originalBox.x);
+        expect(result.y).toBe(originalBox.y);
+        expect(result.width).toBeGreaterThan(originalBox.width);
+      });
+    });
+
+    describe("Real-world scenarios", () => {
+      it("should handle typical user resize operation near image edge", () => {
+        // Simulate a user resizing a frame near the bottom-right corner
+        const originalBox: BoundingBox = { x: 800, y: 600, width: 150, height: 100 };
+        const frameRotation = 15; // Slight rotation
+        const mouseDelta: Point = { x: 250, y: 250 }; // Large resize attempt
+        
+        const result = calculateSpatialEdgeFixedResize(
+          originalBox,
+          frameRotation,
+          "bottom",
+          mouseDelta,
+          scaleFactors,
+          imageWidth,
+          imageHeight
+        );
+        
+        // Should produce a reasonable result within boundaries
+        expect(result.x).toBeGreaterThanOrEqual(0);
+        expect(result.y).toBeGreaterThanOrEqual(0);
+        expect(result.x + result.width).toBeLessThanOrEqual(imageWidth);
+        expect(result.y + result.height).toBeLessThanOrEqual(imageHeight);
+        expect(result.width).toBeGreaterThan(0);
+        expect(result.height).toBeGreaterThan(0);
+      });
+
+      it("should handle multiple consecutive resize operations", () => {
+        let currentBox: BoundingBox = { x: 400, y: 300, width: 100, height: 100 };
+        const frameRotation = 30;
+        
+        // Simulate multiple resize operations
+        const resizeOperations = [
+          { edge: "right" as const, delta: { x: 50, y: 0 } },
+          { edge: "bottom" as const, delta: { x: 0, y: 30 } },
+          { edge: "left" as const, delta: { x: -20, y: 0 } },
+          { edge: "top" as const, delta: { x: 0, y: -15 } }
+        ];
+        
+        resizeOperations.forEach(({ edge, delta }) => {
+          currentBox = calculateSpatialEdgeFixedResize(
+            currentBox,
+            frameRotation,
+            edge,
+            delta,
+            scaleFactors,
+            imageWidth,
+            imageHeight
+          );
+          
+          // Each operation should maintain valid state
+          expect(currentBox.x).toBeGreaterThanOrEqual(0);
+          expect(currentBox.y).toBeGreaterThanOrEqual(0);
+          expect(currentBox.x + currentBox.width).toBeLessThanOrEqual(imageWidth);
+          expect(currentBox.y + currentBox.height).toBeLessThanOrEqual(imageHeight);
+          expect(currentBox.width).toBeGreaterThan(0);
+          expect(currentBox.height).toBeGreaterThan(0);
         });
       });
     });

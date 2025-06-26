@@ -293,6 +293,8 @@ export function calculateResizedBoundingBox(
   mouseDelta: Point,
   scaleFactors: ScaleFactors,
   frameRotation: number = 0,
+  imageWidth: number = Infinity,
+  imageHeight: number = Infinity,
   minWidth: number = 20,
   minHeight: number = 20
 ): BoundingBox {
@@ -308,13 +310,15 @@ export function calculateResizedBoundingBox(
     );
   }
   
-  // For rotated frames, use the spatial edge-fixed algorithm
+  // For rotated frames, use the spatial edge-fixed algorithm with boundary validation
   return calculateSpatialEdgeFixedResize(
     originalBox,
     frameRotation,
     edge,
     mouseDelta,
     scaleFactors,
+    imageWidth,
+    imageHeight,
     minWidth,
     minHeight
   );
@@ -653,16 +657,148 @@ export function calculateAxisAlignedBoundingBox(
   };
 }
 
+// ===== PHASE 6: BOUNDARY VALIDATION & POLISH =====
+
 /**
- * Calculate new bounding box for spatial edge-fixed resize
+ * Validate input parameters for spatial edge-fixed resize
+ * @param boundingBox - Bounding box to validate
+ * @param frameRotation - Frame rotation to validate
+ * @param scaleFactors - Scale factors to validate
+ * @returns True if all parameters are valid
+ */
+function validateSpatialResizeInputs(
+  boundingBox: BoundingBox,
+  frameRotation: number,
+  scaleFactors: ScaleFactors
+): boolean {
+  // Validate bounding box
+  if (!boundingBox || 
+      typeof boundingBox.x !== 'number' || 
+      typeof boundingBox.y !== 'number' ||
+      typeof boundingBox.width !== 'number' || 
+      typeof boundingBox.height !== 'number' ||
+      boundingBox.width <= 0 || 
+      boundingBox.height <= 0) {
+    return false;
+  }
+
+  // Validate rotation
+  if (typeof frameRotation !== 'number' || !isFinite(frameRotation)) {
+    return false;
+  }
+
+  // Validate scale factors
+  if (!scaleFactors || 
+      typeof scaleFactors.scaleX !== 'number' || 
+      typeof scaleFactors.scaleY !== 'number' ||
+      scaleFactors.scaleX <= 0 || 
+      scaleFactors.scaleY <= 0) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Validate bounding box against image boundaries while preserving fixed edge constraint
+ * @param boundingBox - The bounding box to validate
+ * @param fixedEdgeCenter - Center point of the edge that should remain fixed
+ * @param frameDimensions - The frame dimensions (width, height)
+ * @param frameRotation - Frame rotation in degrees
+ * @param resizeEdge - Which edge was resized
+ * @param imageWidth - Image width boundary
+ * @param imageHeight - Image height boundary
+ * @returns Validated bounding box that respects both image boundaries and fixed edge constraint
+ */
+export function validateImageBoundariesWithFixedEdge(
+  boundingBox: BoundingBox,
+  fixedEdgeCenter: Point,
+  frameDimensions: {width: number, height: number},
+  frameRotation: number,
+  resizeEdge: 'top' | 'right' | 'bottom' | 'left',
+  imageWidth: number,
+  imageHeight: number
+): BoundingBox {
+  // If the bounding box is within boundaries, return as-is
+  if (boundingBox.x >= 0 && 
+      boundingBox.y >= 0 && 
+      boundingBox.x + boundingBox.width <= imageWidth && 
+      boundingBox.y + boundingBox.height <= imageHeight) {
+    return boundingBox;
+  }
+
+  // Calculate the maximum dimensions that would fit within image boundaries
+  // while maintaining the fixed edge constraint
+  let constrainedDimensions = { ...frameDimensions };
+  let needsRecalculation = false;
+
+  // For rotated frames, we need to be more careful about boundary constraints
+  // Calculate what the maximum frame dimensions could be while keeping the fixed edge in place
+  
+  // Try to find the largest dimensions that would keep the bounding box within image bounds
+  const maxIterations = 10; // Prevent infinite loops
+  let iteration = 0;
+  
+  while (iteration < maxIterations) {
+    // Recalculate frame center with current constrained dimensions
+    const newFrameCenter = calculateNewFrameCenter(
+      fixedEdgeCenter,
+      constrainedDimensions.width,
+      constrainedDimensions.height,
+      frameRotation,
+      resizeEdge
+    );
+    
+    // Calculate the bounding box with constrained dimensions
+    const testBoundingBox = calculateAxisAlignedBoundingBox(
+      newFrameCenter,
+      constrainedDimensions.width,
+      constrainedDimensions.height,
+      frameRotation
+    );
+    
+    // Check if this bounding box fits within image boundaries
+    if (testBoundingBox.x >= 0 && 
+        testBoundingBox.y >= 0 && 
+        testBoundingBox.x + testBoundingBox.width <= imageWidth && 
+        testBoundingBox.y + testBoundingBox.height <= imageHeight) {
+      // This configuration works, return it
+      return testBoundingBox;
+    }
+    
+    // If we're here, the bounding box still exceeds boundaries
+    // Reduce dimensions by a small amount and try again
+    const reductionFactor = 0.95;
+    constrainedDimensions.width *= reductionFactor;
+    constrainedDimensions.height *= reductionFactor;
+    needsRecalculation = true;
+    iteration++;
+  }
+  
+  // If we couldn't find a valid configuration after iterations,
+  // fall back to simple boundary clamping (may not preserve fixed edge perfectly)
+  const clampedBox = {
+    x: Math.max(0, Math.min(boundingBox.x, imageWidth - boundingBox.width)),
+    y: Math.max(0, Math.min(boundingBox.y, imageHeight - boundingBox.height)),
+    width: Math.min(boundingBox.width, imageWidth - Math.max(0, boundingBox.x)),
+    height: Math.min(boundingBox.height, imageHeight - Math.max(0, boundingBox.y))
+  };
+  
+  return clampedBox;
+}
+
+/**
+ * Calculate new bounding box for spatial edge-fixed resize (with boundary validation)
  * @param originalBoundingBox - Current axis-aligned bounding box
  * @param frameRotation - Frame rotation in degrees
  * @param resizeEdge - Which edge is being resized
  * @param mouseDelta - Mouse movement delta in display coordinates
  * @param scaleFactors - Scale factors for coordinate conversion
+ * @param imageWidth - Image width for boundary validation
+ * @param imageHeight - Image height for boundary validation
  * @param minWidth - Minimum allowed width
  * @param minHeight - Minimum allowed height
- * @returns New axis-aligned bounding box
+ * @returns New axis-aligned bounding box with boundary validation
  */
 export function calculateSpatialEdgeFixedResize(
   originalBoundingBox: BoundingBox,
@@ -670,59 +806,93 @@ export function calculateSpatialEdgeFixedResize(
   resizeEdge: 'top' | 'right' | 'bottom' | 'left',
   mouseDelta: Point,
   scaleFactors: ScaleFactors,
+  imageWidth: number = Infinity,
+  imageHeight: number = Infinity,
   minWidth: number = 20,
   minHeight: number = 20
 ): BoundingBox {
-  // Step 1: Convert mouse delta to image coordinates
-  const imageDelta = applyInverseScaleTransform(mouseDelta, scaleFactors);
-  
-  // Step 2: Transform to frame local coordinates  
-  const localDelta = transformMouseDeltaToFrameLocal(imageDelta, frameRotation);
-  
-  // Step 3: Calculate new frame dimensions
-  const newDimensions = calculateNewFrameDimensions(
-    originalBoundingBox.width,
-    originalBoundingBox.height,
-    resizeEdge,
-    localDelta,
-    minWidth,
-    minHeight
-  );
-  
-  // Step 4: Get current rotated corners
-  const currentCenter = calculateRectangleCenter(
-    originalBoundingBox.x,
-    originalBoundingBox.y,
-    originalBoundingBox.width,
-    originalBoundingBox.height
-  );
-  const rotatedCorners = calculateRotatedCorners(
-    currentCenter, 
-    originalBoundingBox.width,
-    originalBoundingBox.height, 
-    frameRotation
-  );
-  
-  // Step 5: Identify fixed edge and its center
-  const oppositeEdge = getOppositeEdge(resizeEdge);
-  const fixedEdgeCenter = getFixedEdgeCenter(rotatedCorners, oppositeEdge);
-  
-  // Step 6: Calculate new frame center
-  const newFrameCenter = calculateNewFrameCenter(
-    fixedEdgeCenter,
-    newDimensions.width,
-    newDimensions.height, 
-    frameRotation,
-    resizeEdge
-  );
-  
-  // Step 7: Calculate new axis-aligned bounding box
-  const newBoundingBox = calculateAxisAlignedBoundingBox(
-    newFrameCenter,
-    newDimensions.width,
-    newDimensions.height,
-    frameRotation
-  );
-  
-  return newBoundingBox;
+  // Input validation with error handling
+  if (!validateSpatialResizeInputs(originalBoundingBox, frameRotation, scaleFactors)) {
+    console.warn('Invalid inputs to calculateSpatialEdgeFixedResize, falling back to original bounding box');
+    return originalBoundingBox;
+  }
+
+  // Performance optimization: for very small mouse movements, return original box
+  const mouseDeltaMagnitude = Math.sqrt(mouseDelta.x * mouseDelta.x + mouseDelta.y * mouseDelta.y);
+  if (mouseDeltaMagnitude < 0.5) {
+    return originalBoundingBox;
+  }
+
+  try {
+    // Step 1: Convert mouse delta to image coordinates
+    const imageDelta = applyInverseScaleTransform(mouseDelta, scaleFactors);
+    
+    // Step 2: Transform to frame local coordinates  
+    const localDelta = transformMouseDeltaToFrameLocal(imageDelta, frameRotation);
+    
+    // Step 3: Calculate new frame dimensions
+    const newDimensions = calculateNewFrameDimensions(
+      originalBoundingBox.width,
+      originalBoundingBox.height,
+      resizeEdge,
+      localDelta,
+      minWidth,
+      minHeight
+    );
+    
+    // Step 4: Get current rotated corners
+    const currentCenter = calculateRectangleCenter(
+      originalBoundingBox.x,
+      originalBoundingBox.y,
+      originalBoundingBox.width,
+      originalBoundingBox.height
+    );
+    const rotatedCorners = calculateRotatedCorners(
+      currentCenter, 
+      originalBoundingBox.width,
+      originalBoundingBox.height, 
+      frameRotation
+    );
+    
+    // Step 5: Identify fixed edge and its center
+    const oppositeEdge = getOppositeEdge(resizeEdge);
+    const fixedEdgeCenter = getFixedEdgeCenter(rotatedCorners, oppositeEdge);
+    
+    // Step 6: Calculate new frame center
+    const newFrameCenter = calculateNewFrameCenter(
+      fixedEdgeCenter,
+      newDimensions.width,
+      newDimensions.height, 
+      frameRotation,
+      resizeEdge
+    );
+    
+    // Step 7: Calculate new axis-aligned bounding box
+    const newBoundingBox = calculateAxisAlignedBoundingBox(
+      newFrameCenter,
+      newDimensions.width,
+      newDimensions.height,
+      frameRotation
+    );
+    
+    // Step 8: Validate image boundaries (with fixed-edge preservation)
+    if (imageWidth < Infinity && imageHeight < Infinity) {
+      return validateImageBoundariesWithFixedEdge(
+        newBoundingBox,
+        fixedEdgeCenter,
+        newDimensions,
+        frameRotation,
+        resizeEdge,
+        imageWidth,
+        imageHeight
+      );
+    }
+    
+    return newBoundingBox;
+    
+  } catch (error) {
+    // Error handling: fall back to original bounding box if anything goes wrong
+    console.error('Error in calculateSpatialEdgeFixedResize:', error);
+    return originalBoundingBox;
+  }
 } 
