@@ -172,84 +172,11 @@ export function normalizeAngle(angle: number): number {
   return normalized;
 }
 
-/**
- * Calculate rotated rectangle corners
- */
-export function getRotatedRectangleCorners(
-  boundingBox: ViewportFrame['boundingBox'],
-  rotation: number,
-  scaleFactors: ScaleFactors
-): Point[] {
-  const center = getBoundingBoxCenter(boundingBox, scaleFactors);
-  const scaledWidth = boundingBox.width * scaleFactors.scaleX;
-  const scaledHeight = boundingBox.height * scaleFactors.scaleY;
-  
-  // Get axis-aligned corners relative to center
-  const localCorners = calculateAxisAlignedCorners({ x: 0, y: 0 }, scaledWidth, scaledHeight);
-  
-  // Apply rotation and translate to actual center
-  const angleRad = degreesToRadians(rotation);
-  return localCorners.map(corner => {
-    const rotated = applyRotationMatrix(corner, angleRad);
-    return {
-      x: center.x + rotated.x,
-      y: center.y + rotated.y,
-    };
-  });
-}
 
-/**
- * Calculate rotation handle positions for all four corners
- */
-export function getAllRotationHandlePositions(
-  corners: Point[],
-  center: Point,
-  handleOffset: number = 20
-): Point[] {
-  return corners.map(corner => {
-    const angle = Math.atan2(corner.y - center.y, corner.x - center.x);
-    const offsetVector = applyRotationMatrix({ x: handleOffset, y: 0 }, angle);
-    
-    return {
-      x: corner.x + offsetVector.x,
-      y: corner.y + offsetVector.y,
-    };
-  });
-}
 
-/**
- * Calculate rotation handle position (offset from top-right corner)
- */
-export function getRotationHandlePosition(
-  corners: Point[],
-  center: Point,
-  handleOffset: number = 20
-): Point {
-  const topRight = corners[1]; // Top-right corner
-  const angle = Math.atan2(topRight.y - center.y, topRight.x - center.x);
-  const offsetVector = applyRotationMatrix({ x: handleOffset, y: 0 }, angle);
-  
-  return {
-    x: topRight.x + offsetVector.x,
-    y: topRight.y + offsetVector.y,
-  };
-}
 
-/**
- * Get mouse position relative to an SVG element
- */
-export function getMousePositionRelativeToSVG(
-  event: React.MouseEvent | MouseEvent,
-  svgElement: SVGSVGElement | null
-): Point {
-  if (!svgElement) return { x: 0, y: 0 };
-  
-  const rect = svgElement.getBoundingClientRect();
-  return {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top,
-  };
-}
+
+
 
 /**
  * Get mouse position relative to any HTML element
@@ -415,15 +342,7 @@ export function validateBoundingBox(
 
 // ===== PHASE 1: CORE GEOMETRY UTILITIES FOR SPATIAL EDGE-FIXED RESIZE =====
 
-/**
- * Transform a point by rotating it around origin by given angle
- * @param point - The point to rotate (x, y coordinates)
- * @param angleInDegrees - Rotation angle in degrees (positive = clockwise in +y downward systems)
- * @returns The rotated point
- */
-export function rotatePoint(point: Point, angleInDegrees: number): Point {
-  return applyRotationMatrix(point, degreesToRadians(angleInDegrees));
-}
+
 
 /**
  * Apply inverse rotation to transform mouse delta to frame's local coordinate system

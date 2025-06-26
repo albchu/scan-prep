@@ -1,5 +1,4 @@
 import {
-  rotatePoint,
   transformMouseDeltaToFrameLocal,
   calculateRotatedCorners,
   getFixedEdgeCenter,
@@ -12,6 +11,18 @@ import {
 } from "../geometryUtils";
 
 import { BoundingBox } from "@shared/types";
+
+// Local helper function for testing inverse relationship
+function rotatePoint(point: Point, angleInDegrees: number): Point {
+  const angleRad = (angleInDegrees * Math.PI) / 180;
+  const cos = Math.cos(angleRad);
+  const sin = Math.sin(angleRad);
+  
+  return {
+    x: point.x * cos - point.y * sin,
+    y: point.x * sin + point.y * cos,
+  };
+}
 
 describe("Geometry Utils Integration Tests", () => {
   describe("Edge Analysis and Spatial Transformations", () => {

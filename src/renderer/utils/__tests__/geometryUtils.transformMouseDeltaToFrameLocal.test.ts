@@ -1,4 +1,16 @@
-import { transformMouseDeltaToFrameLocal, rotatePoint, Point } from "../geometryUtils";
+import { transformMouseDeltaToFrameLocal, Point } from "../geometryUtils";
+
+// Local helper function for testing inverse relationship
+function rotatePoint(point: Point, angleInDegrees: number): Point {
+  const angleRad = (angleInDegrees * Math.PI) / 180;
+  const cos = Math.cos(angleRad);
+  const sin = Math.sin(angleRad);
+  
+  return {
+    x: point.x * cos - point.y * sin,
+    y: point.x * sin + point.y * cos,
+  };
+}
 
 describe("transformMouseDeltaToFrameLocal", () => {
   it("should handle 0 degree rotation (no transformation)", () => {
