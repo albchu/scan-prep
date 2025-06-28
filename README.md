@@ -1,5 +1,13 @@
 # Scan Prep - Image Splitting Tool
 
+> **⚠️ ARCHIVED REPOSITORY**
+> 
+> This repository has been archived and is no longer actively maintained. Development has moved to:
+> 
+> **🔗 [scan-chop](https://github.com/albchu/scan-chop)** - The new and improved version
+> 
+> Please visit the new repository for the latest updates, features, and active development.
+
 A desktop application for automatically detecting and extracting individual images from scanned documents containing multiple photos or images.
 
 ## Overview
